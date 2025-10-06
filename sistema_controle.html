@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sistema de Controle</title>
+<style>
+:root{
+  --bg:#0b0d10; --panel:#0f1114; --muted:#9aa1a6; --accent:#00b894;
+  --danger:#ff7675; --glass: rgba(255,255,255,0.03);
+  --card:#0d0f12;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#050607 0%, #0b0d10 100%);color:#e6eef1}
+.container{max-width:1100px;margin:28px auto;padding:20px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{
+  width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#006266);
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:#021;box-shadow:0 6px 18px rgba(0,0,0,0.6)
+}
+.title{font-size:20px;font-weight:600}
+.controls{display:flex;gap:10px;align-items:center}
+.btn{background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:var(--muted);
+padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.primary{background:linear-gradient(90deg,var(--accent),#00d68f);color:#021;border:none}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:18px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef1}
+.small{width:100px}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.products-list{margin-top:8px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding-right:6px}
+.product{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.02)}
+.pname{font-weight:700}
+.meta{font-size:13px;color:var(--muted)}
+.product-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:6px;border-radius:8px;cursor:pointer;color:var(--muted)}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.stat{background:linear-gradient(180deg,rgba(255,255,255,0.015),transparent);padding:12px;border-radius:10px;text-align:center;border:1px solid rgba(255,255,255,0.02)}
+.stat .num{font-weight:800;font-size:18px}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th{color:var(--muted);text-align:left;padding:10px;font-size:13px}
+.table td{padding:10px;border-top:1px dashed rgba(255,255,255,0.03);font-size:14px}
+.footer{margin-top:16px;display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.hint{font-size:13px;color:var(--muted)}
+.small-muted{font-size:12px;color:var(--muted);margin-top:6px}
+.limit-badge{background:rgba(255,255,255,0.03);padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.02);font-size:12px}
+.empty{opacity:0.6;color:var(--muted);padding:18px;text-align:center}
+.flex{display:flex;gap:10px;align-items:center}
+.input-file{display:none}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.brand .title{display:none}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">SC</div>
+      <div>
+        <div class="title">Sistema de Controle</div>
+        <div class="small-muted">Gestão de estoque, margem e financeiro — até 10 itens</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="exportBtn" class="btn">Salvar em arquivo</button>
+      <label class="btn" for="fileInput">Carregar arquivo</label>
+      <input id="fileInput" class="input-file" type="file" accept="application/json"/>
+      <button id="clearBtn" class="btn">Limpar</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><strong>Cadastrar produto</strong><div class="small-muted">Máx 10 itens</div></div>
+        <div class="limit-badge" id="countBadge">0 / 10</div>
+      </div>
+
+      <div class="label">Nome do produto</div>
+      <input id="pName" class="input" placeholder="Ex: Camiseta branca"/>
+
+      <div class="form-row" style="margin-top:8px">
+        <div style="flex:1">
+          <div class="label">Preço de custo (R$)</div>
+          <input id="pCost" class="input" placeholder="0.00" type="number" min="0" step="0.01"/>
+        </div>
+        <div style="width:110px">
+          <div class="label">Preço venda (R$)</div>
+          <input id="pPrice" class="input small" placeholder="0.00" type="number" min="0" step="0.01"/>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top:8px">
+        <div style="flex:1">
+          <div class="label">Quantidade inicial</div>
+          <input id="pQty" class="input" placeholder="0" type="number" min="0" step="1"/>
+        </div>
+        <div style="width:120px">
+          <div class="label">Categoria (opcional)</div>
+          <input id="pCat" class="input" placeholder="Ex: Roupas"/>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="addProduct" class="btn primary">Adicionar / Atualizar</button>
+        <button id="resetForm" class="btn">Limpar campos</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="label">Operação rápida (entrada / saída)</div>
+        <div class="form-row">
+          <select id="opProduct" class="input">
+            <option value="">Escolha um produto</option>
+          </select>
+          <input id="opQty" class="input small" type="number" min="1" step="1" placeholder="Qtd"/>
+          <select id="opType" class="input small">
+            <option value="in">Entrada</option>
+            <option value="out">Saída</option>
+          </select>
+          <button id="applyOp" class="btn">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="small-muted" style="margin-top:10px">
+        Use "Salvar em arquivo" para exportar os dados. Para restaurar, escolha "Carregar arquivo" e selecione o arquivo JSON exportado anteriormente.
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong>Painel</strong>
+        <div class="flex">
+          <div class="hint">Itens cadastrados</div>
+          <div class="limit-badge" id="badgeRight">0</div>
+        </div>
+      </div>
+
+      <div class="summary" id="summary">
+        <div class="stat">
+          <div class="label">Total em estoque (R$)</div>
+          <div class="num" id="totalStock">R$ 0,00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total vendido (R$)</div>
+          <div class="num" id="totalSold">R$ 0,00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Lucro total (R$)</div>
+          <div class="num" id="totalProfit">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Produtos</strong>
+        <div class="small-muted">Clique para editar / ver histórico</div>
+      </div>
+
+      <div class="products-list" id="productsList">
+        <div class="empty">Nenhum produto cadastrado.</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <strong>Relatório de transações</strong>
+        <table class="table" id="txTable">
+          <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Detalhes</th></tr></thead>
+          <tbody><tr><td colspan="5" class="empty">Sem transações.</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div class="hint">Exportável • Offline-friendly</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Data model:
+ products: [
+   {id,name,cost,price,qty,category,history: [{ts,type,qty}]}
+ ]
+*/
+const MAX_ITEMS = 10;
+let products = [];
+let transactions = [];
+
+const el = id => document.getElementById(id);
+
+function money(v){ return 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function updateCounts(){
+  el('countBadge').textContent = products.length + ' / ' + MAX_ITEMS;
+  el('badgeRight').textContent = products.length;
+}
+
+function refreshProductSelect(){
+  const sel = el('opProduct');
+  sel.innerHTML = '<option value="">Escolha um produto</option>';
+  products.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderProducts(){
+  const container = el('productsList');
+  container.innerHTML = '';
+  if(products.length === 0){
+    container.innerHTML = '<div class="empty">Nenhum produto cadastrado.</div>';
+    el('txTable').querySelector('tbody').innerHTML = '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
+    updateSummary();
+    return;
+  }
+  products.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    const left = document.createElement('div');
+    left.style.display='flex'; left.style.flexDirection='column';
+    const name = document.createElement('div'); name.className='pname'; name.textContent = p.name;
+    const meta = document.createElement('div'); meta.className='meta'; meta.textContent = `${p.qty} unidades • Custo ${money(p.cost)} • Venda ${money(p.price)} • Lucro unit ${money((p.price - p.cost))}`;
+    left.appendChild(name); left.appendChild(meta);
+    const actions = document.createElement('div'); actions.className='product-actions';
+    const histBtn = document.createElement('button'); histBtn.className='icon-btn'; histBtn.textContent='Histórico';
+    histBtn.onclick = ()=> showHistory(p.id);
+    const editBtn = document.createElement('button'); editBtn.className='icon-btn'; editBtn.textContent='Editar';
+    editBtn.onclick = ()=> loadIntoForm(p.id);
+    const delBtn = document.createElement('button'); delBtn.className='icon-btn'; delBtn.style.borderColor='rgba(255,0,0,0.12)'; delBtn.textContent='Excluir';
+    delBtn.onclick = ()=> { if(confirm('Excluir produto? Isso removerá todo o histórico.')) { deleteProduct(p.id); } };
+    actions.appendChild(histBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
+    div.appendChild(left); div.appendChild(actions);
+    container.appendChild(div);
+  });
+  renderTransactions();
+  updateSummary();
+}
+
+function renderTransactions(){
+  const tbody = el('txTable').querySelector('tbody');
+  if(transactions.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  transactions.slice().reverse().forEach(tx => {
+    const tr = document.createElement('tr');
+    const d = new Date(tx.ts).toLocaleString();
+    tr.innerHTML = `<td>${d}</td><td>${tx.productName}</td><td>${tx.type === 'in' ? 'Entrada':'Saída'}</td><td>${tx.qty}</td><td>${tx.note || ''}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateSummary(){
+  let totalStock = 0, totalSold=0, totalProfit=0;
+  products.forEach(p => {
+    totalStock += p.qty * p.cost;
+    // compute sold by scanning transactions for that product
+    const sold = transactions.filter(t => t.productId===p.id && t.type==='out').reduce((s,t)=>s+t.qty,0);
+    totalSold += transactions.filter(t => t.productId===p.id && t.type==='out').reduce((s,t)=>s + (t.qty * (p.price)),0);
+    totalProfit += transactions.filter(t => t.productId===p.id && t.type==='out').reduce((s,t)=>s + (t.qty * (p.price - p.cost)),0);
+  });
+  el('totalStock').textContent = money(totalStock);
+  el('totalSold').textContent = money(totalSold);
+  el('totalProfit').textContent = money(totalProfit);
+}
+
+function saveToLocal(){ // also keep local copy for convenience
+  const payload = {products,transactions};
+  localStorage.setItem('sistema_controle_backup', JSON.stringify(payload));
+}
+
+function addOrUpdateProduct(){
+  const name = el('pName').value.trim();
+  const cost = parseFloat(el('pCost').value || 0);
+  const price = parseFloat(el('pPrice').value || 0);
+  const qty = parseInt(el('pQty').value || 0);
+  const cat = el('pCat').value.trim();
+  if(!name) return alert('Nome é obrigatório');
+  if(products.length >= MAX_ITEMS && !editingId) return alert('Limite de produtos atingido (10)');
+  if(price < 0 || cost < 0) return alert('Preços inválidos');
+  if(editingId){
+    const p = products.find(x=>x.id===editingId);
+    p.name = name; p.cost = cost; p.price = price; p.category = cat; // qty left unchanged unless user wants
+    // if provided qty and >0, set as initial (replace)
+    if(!isNaN(qty) && qty>=0) p.qty = qty;
+    editingId = null;
+    el('addProduct').textContent = 'Adicionar / Atualizar';
+  } else {
+    if(products.length >= MAX_ITEMS) return alert('Limite de produtos atingido (10)');
+    const id = uid();
+    products.push({id,name,cost,price,qty,category:cat,history:[]});
+  }
+  refreshProductSelect();
+  renderProducts();
+  saveToLocal();
+  clearForm();
+}
+
+let editingId = null;
+function loadIntoForm(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  el('pName').value = p.name;
+  el('pCost').value = p.cost;
+  el('pPrice').value = p.price;
+  el('pQty').value = p.qty;
+  el('pCat').value = p.category || '';
+  editingId = id;
+  el('addProduct').textContent = 'Salvar alteração';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteProduct(id){
+  products = products.filter(p=>p.id!==id);
+  transactions = transactions.filter(t=>t.productId!==id);
+  refreshProductSelect(); renderProducts(); saveToLocal();
+}
+
+function clearForm(){
+  el('pName').value=''; el('pCost').value=''; el('pPrice').value=''; el('pQty').value=''; el('pCat').value='';
+  editingId = null; el('addProduct').textContent = 'Adicionar / Atualizar';
+}
+
+function applyOperation(){
+  const pid = el('opProduct').value;
+  const qty = parseInt(el('opQty').value || 0);
+  const type = el('opType').value;
+  if(!pid) return alert('Escolha um produto');
+  if(!qty || qty<=0) return alert('Quantidade inválida');
+  const p = products.find(x=>x.id===pid);
+  if(!p) return alert('Produto não encontrado');
+  if(type==='out' && p.qty < qty) {
+    if(!confirm('Quantidade em estoque é menor.\nDeseja permitir saída (pode ficar negativo)?')) return;
+  }
+  const ts = Date.now();
+  transactions.push({ts,productId:pid,productName:p.name,type,qty,note:''});
+  if(type==='in') p.qty += qty;
+  else p.qty -= qty;
+  p.history.push({ts,type,qty});
+  renderProducts(); saveToLocal();
+  el('opQty').value='';
+}
+
+function showHistory(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  let s = `Histórico do produto: ${p.name}\n\n`;
+  if(!p.history || p.history.length===0) s += 'Sem movimentos.';
+  else {
+    p.history.forEach(h => {
+      const d = new Date(h.ts).toLocaleString();
+      s += `${d} — ${h.type==='in'?'Entrada':'Saída'} — ${h.qty}\n`;
+    });
+  }
+  alert(s);
+}
+
+function exportToFile(){
+  const payload = {products,transactions,exportedAt: Date.now()};
+  const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sistema_controle_export.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importFromFile(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const obj = JSON.parse(e.target.result);
+      if(!obj.products) return alert('Arquivo inválido');
+      products = obj.products;
+      transactions = obj.transactions || [];
+      renderProducts(); refreshProductSelect(); saveToLocal();
+      alert('Dados carregados com sucesso.');
+    }catch(err){ alert('Erro ao ler arquivo: ' + err.message) }
+  };
+  reader.readAsText(file);
+}
+
+function renderTransactions(){ // ensure table + summary
+  const tbody = el('txTable').querySelector('tbody');
+  if(transactions.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
+    updateSummary();
+    return;
+  }
+  tbody.innerHTML = '';
+  transactions.slice().reverse().forEach(tx => {
+    const tr = document.createElement('tr');
+    const d = new Date(tx.ts).toLocaleString();
+    tr.innerHTML = `<td>${d}</td><td>${tx.productName}</td><td>${tx.type === 'in' ? 'Entrada':'Saída'}</td><td>${tx.qty}</td><td>${tx.note || ''}</td>`;
+    tbody.appendChild(tr);
+  });
+  updateSummary();
+}
+
+function clearAll(){
+  if(!confirm('Limpar todos os dados do sistema?')) return;
+  products = []; transactions = []; localStorage.removeItem('sistema_controle_backup');
+  refreshProductSelect(); renderProducts(); alert('Dados removidos.');
+}
+
+function tryLoadBackup(){
+  const raw = localStorage.getItem('sistema_controle_backup');
+  if(raw){
+    try{
+      const obj = JSON.parse(raw);
+      products = obj.products || [];
+      transactions = obj.transactions || [];
+    }catch(e){ products=[]; transactions=[]; }
+  }
+  updateCounts();
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  el('addProduct').onclick = addOrUpdateProduct;
+  el('resetForm').onclick = clearForm;
+  el('applyOp').onclick = applyOperation;
+  el('exportBtn').onclick = exportToFile;
+  el('fileInput').onchange = (e)=> { if(e.target.files.length) importFromFile(e.target.files[0]); };
+  el('clearBtn').onclick = clearAll;
+
+  tryLoadBackup();
+  refreshProductSelect();
+  renderProducts();
+  updateCounts();
+});
+
+// keep counts updated
+setInterval(()=>{
+  updateCounts();
+},800);
+</script>
+</body>
+</html>
