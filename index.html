@@ -109,6 +109,9 @@ select::-ms-expand { display: none; }
 
 /* admin access */
 .admin-access{display:none;margin-top:12px}
+
+/* phone input */
+.phone-input{font-family:monospace;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -329,6 +332,7 @@ select::-ms-expand { display: none; }
 
         <div style="margin-top:12px">
           <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
+          <button id="viewHistoryBtn" class="btn">Ver Histórico Completo</button>
         </div>
       </div>
     </div>
@@ -375,34 +379,45 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function storageKey(email){ return 'sc_user_' + email.toLowerCase(); }
 function clientStorageKey(email){ return 'sc_client_' + email.toLowerCase(); }
 function ordersStorageKey(){ return 'sc_orders'; }
-function normalizeLocal(local){ return local.replace(/\W/g,'').toLowerCase(); }
 
-// Format phone number
-function formatPhoneNumber(phone) {
+// Format phone number in real-time
+function formatPhoneNumber(value) {
   // Remove tudo que não é número
-  phone = phone.replace(/\D/g, '');
+  const numbers = value.replace(/\D/g, '');
   
-  // Formata conforme o tamanho
-  if (phone.length === 11) {
-    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } else if (phone.length === 10) {
-    return phone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  // Limita a 11 caracteres
+  const limited = numbers.slice(0, 11);
+  
+  // Aplica a formatação
+  if (limited.length <= 10) {
+    return limited.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
   } else {
-    return phone;
+    return limited.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
   }
 }
 
 // Phone input formatter
-function setupPhoneFormatter(inputId) {
+function setupPhoneInput(inputId) {
   const input = el(inputId);
-  if (input) {
-    input.addEventListener('input', function(e) {
-      const formatted = formatPhoneNumber(e.target.value);
-      if (formatted !== e.target.value) {
-        e.target.value = formatted;
-      }
-    });
-  }
+  if (!input) return;
+  
+  input.addEventListener('input', function(e) {
+    const cursorPosition = e.target.selectionStart;
+    const formatted = formatPhoneNumber(e.target.value);
+    
+    e.target.value = formatted;
+    
+    // Mantém o cursor na posição correta
+    const extraChars = formatted.length - e.target.value.length;
+    e.target.setSelectionRange(cursorPosition + extraChars, cursorPosition + extraChars);
+  });
+  
+  input.addEventListener('keydown', function(e) {
+    // Permite apenas números, backspace, delete e teclas de navegação
+    if (!/[\d]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(e.key)) {
+      e.preventDefault();
+    }
+  });
 }
 
 // Login animations
@@ -475,6 +490,12 @@ el('clientRegisterBtn').onclick = ()=> {
   if(!password) return alert('Digite uma senha.');
   registerClient(email, password); 
 }
+
+// View History Button
+el('viewHistoryBtn').onclick = () => {
+  state.currentView = 'history';
+  renderClientViews();
+};
 
 // Admin registration and login
 function registerAdmin(email, password) {
@@ -1074,7 +1095,11 @@ el('checkoutBtn').onclick = () => {
 function openCheckoutModal() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
-  modal.onclick = (ev) => { if(ev.target === modal) modal.remove(); };
+  modal.onclick = (ev) => { 
+    if(ev.target === modal) {
+      modal.remove();
+    }
+  };
   
   let total = 0;
   state.cart.forEach(item => {
@@ -1117,7 +1142,7 @@ function openCheckoutModal() {
         </div>
         <div>
           <label class="small">Telefone</label>
-          <input id="checkoutPhone" class="input" placeholder="(11) 99999-9999">
+          <input id="checkoutPhone" class="input phone-input" placeholder="(11) 99999-9999" maxlength="15">
         </div>
         <div>
           <label class="small">Endereço completo</label>
@@ -1134,21 +1159,23 @@ function openCheckoutModal() {
   
   document.body.appendChild(modal);
   
-  // Setup phone formatter
-  setupPhoneFormatter('checkoutPhone');
+  // Setup phone formatter in real-time
+  setupPhoneInput('checkoutPhone');
   
-  // Add event listener for confirm order button
-  modal.querySelector('#confirmOrderBtn').onclick = () => {
+  // Add event listener for confirm order button - FIXED
+  const confirmBtn = modal.querySelector('#confirmOrderBtn');
+  confirmBtn.onclick = () => {
     const name = modal.querySelector('#checkoutName').value.trim();
-    let phone = modal.querySelector('#checkoutPhone').value.trim();
+    const phone = modal.querySelector('#checkoutPhone').value.trim();
     const address = modal.querySelector('#checkoutAddress').value.trim();
     
     if (!name || !phone || !address) {
       return alert('Preencha todos os dados de entrega');
     }
     
-    // Format phone number
-    phone = formatPhoneNumber(phone);
+    if (phone.replace(/\D/g, '').length < 10) {
+      return alert('Digite um telefone válido com DDD');
+    }
     
     confirmOrder(name, phone, address);
     modal.remove();
@@ -1243,16 +1270,6 @@ function renderClientOrders() {
     container.innerHTML = '<div class="empty">Nenhum pedido realizado.</div>';
     return;
   }
-  
-  // Add history button
-  const historyBtn = document.createElement('button');
-  historyBtn.className = 'btn secondary';
-  historyBtn.textContent = 'Ver Histórico Completo';
-  historyBtn.onclick = () => {
-    state.currentView = 'history';
-    renderClientViews();
-  };
-  container.appendChild(historyBtn);
   
   orders.sort((a, b) => b.createdAt - a.createdAt).forEach(order => {
     const div = document.createElement('div');
