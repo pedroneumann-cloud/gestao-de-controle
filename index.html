@@ -1083,7 +1083,7 @@ function renderCart() {
   countEl.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
 }
 
-// Checkout - FIXED
+// Checkout - COMPLETELY REWRITTEN
 el('checkoutBtn').onclick = () => {
   if (state.cart.length === 0) return alert('Carrinho vazio');
   openCheckoutModal();
@@ -1092,6 +1092,7 @@ el('checkoutBtn').onclick = () => {
 function openCheckoutModal() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
+  modal.id = 'checkoutModal';
   
   let total = 0;
   state.cart.forEach(item => {
@@ -1154,29 +1155,49 @@ function openCheckoutModal() {
   // Setup phone formatter
   setupPhoneInput('checkoutPhone');
   
-  // Event listeners - FIXED
-  modal.querySelector('#closeCheckoutModal').onclick = () => modal.remove();
-  modal.querySelector('#cancelCheckoutBtn').onclick = () => modal.remove();
+  // Add event listeners directly to the buttons
+  const closeBtn = document.getElementById('closeCheckoutModal');
+  const cancelBtn = document.getElementById('cancelCheckoutBtn');
+  const confirmBtn = document.getElementById('confirmOrderBtn');
   
-  modal.querySelector('#confirmOrderBtn').onclick = () => {
-    const name = modal.querySelector('#checkoutName').value.trim();
-    const phone = modal.querySelector('#checkoutPhone').value.trim();
-    const address = modal.querySelector('#checkoutAddress').value.trim();
-    
-    if (!name || !phone || !address) {
-      return alert('Preencha todos os dados de entrega');
-    }
-    
-    if (phone.replace(/\D/g, '').length < 10) {
-      return alert('Digite um telefone válido com DDD');
-    }
-    
-    confirmOrder(name, phone, address);
-    modal.remove();
-  };
+  if (closeBtn) {
+    closeBtn.onclick = function() {
+      modal.remove();
+    };
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.onclick = function() {
+      modal.remove();
+    };
+  }
+  
+  if (confirmBtn) {
+    confirmBtn.onclick = function() {
+      const name = document.getElementById('checkoutName').value.trim();
+      const phone = document.getElementById('checkoutPhone').value.trim();
+      const address = document.getElementById('checkoutAddress').value.trim();
+      
+      if (!name || !phone || !address) {
+        alert('Preencha todos os dados de entrega');
+        return;
+      }
+      
+      if (phone.replace(/\D/g, '').length < 10) {
+        alert('Digite um telefone válido com DDD');
+        return;
+      }
+      
+      // Call confirmOrder function
+      confirmOrder(name, phone, address);
+      modal.remove();
+    };
+  }
 }
 
 function confirmOrder(name, phone, address) {
+  console.log('Confirmando pedido...'); // Debug log
+  
   // Create order
   const order = {
     id: uid(),
@@ -1202,20 +1223,7 @@ function confirmOrder(name, phone, address) {
     updatedAt: Date.now()
   };
   
-  // Update stock - REMOVED the stock update here to allow multiple orders
-  // Stock will be updated only when status changes to "entregue"
-  
-  // Add transaction for admin
-  state.cart.forEach(item => {
-    const product = state.data.products.find(p => p.id === item.product.id);
-    if (product) {
-      // Don't update stock here - just record the transaction
-      addTransaction('reserved', item.quantity, `Pedido reservado: ${item.product.name} para ${name} (Cliente: ${state.email})`, item.product.name, product.cost, product.price);
-    }
-  });
-  
-  // Save admin data
-  saveState();
+  console.log('Pedido criado:', order); // Debug log
   
   // Add to client orders and purchase history
   if (state.role === 'client') {
@@ -1232,12 +1240,14 @@ function confirmOrder(name, phone, address) {
     
     const key = clientStorageKey(state.email);
     localStorage.setItem(key, JSON.stringify(state.clientData));
+    console.log('Dados do cliente salvos'); // Debug log
   }
   
   // Add to global orders
   loadOrders();
   state.orders.push(order);
   saveOrders();
+  console.log('Pedidos globais salvos'); // Debug log
   
   // Clear cart
   state.cart = [];
@@ -1248,6 +1258,8 @@ function confirmOrder(name, phone, address) {
   // Switch to order tracking
   state.currentView = 'tracking';
   renderClientViews();
+  
+  console.log('Pedido finalizado com sucesso'); // Debug log
 }
 
 // Order tracking for clients
@@ -1450,7 +1462,7 @@ el('backToTrackingBtn').onclick = () => {
   renderClientViews();
 };
 
-// Orders Management for Admin
+// Orders Management for Admin - FIXED PAID STATUS
 function renderOrdersManagement() {
   const container = el('ordersList');
   container.innerHTML = '';
@@ -1522,14 +1534,15 @@ function renderOrdersManagement() {
       order.status = newStatus;
       order.updatedAt = Date.now();
       
-      // Handle stock and profit updates
+      // Handle profit updates when status changes to "paid"
       if (newStatus === 'paid' && oldStatus !== 'paid') {
-        // Add profit when status changes to "paid"
-        addTransaction('sale', 0, `Pagamento confirmado: Pedido #${order.id.slice(-6)} - ${order.clientName}`, 'Venda', 0, order.totalProfit);
+        // Add profit transaction immediately when marked as paid
+        addTransaction('sale', 0, `Pagamento confirmado: Pedido #${order.id.slice(-6)} - ${order.clientName}`, 'Venda', order.totalCost, order.total);
+        console.log('Lucro adicionado ao marcar como Pago');
       }
       
+      // Handle stock updates only when delivered
       if (newStatus === 'delivered' && oldStatus !== 'delivered') {
-        // Update stock only when delivered
         order.items.forEach(item => {
           const product = state.data.products.find(p => p.id === item.productId);
           if (product) {
@@ -1541,7 +1554,7 @@ function renderOrdersManagement() {
       
       saveOrders();
       saveState();
-      renderAll();
+      renderAll(); // Refresh the dashboard
       
       // Update client's order status
       const clientKey = clientStorageKey(order.clientEmail);
