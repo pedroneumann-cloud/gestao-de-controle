@@ -100,6 +100,12 @@ select::-ms-expand { display: none; }
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,0.01);padding:4px;border-radius:10px;margin-bottom:12px}
 .tab{flex:1;text-align:center;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;transition:background .12s}
 .tab.active{background:rgba(255,255,255,0.05)}
+
+/* purchase history */
+.history-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px}
+.history-date{font-size:12px;color:var(--muted)}
+.history-products{margin-top:6px}
+.history-product{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -132,7 +138,6 @@ select::-ms-expand { display: none; }
         <button id="registerBtn" class="btn">Registrar</button>
         <button id="demoBtn" class="btn">Entrar como demo</button>
       </div>
-      <div class="small" style="margin-top:10px;color:var(--muted)">Dica: e-mails que contenham <strong>ADM</strong> recebem permissões de administrador.</div>
     </div>
 
     <!-- Client Login -->
@@ -149,9 +154,7 @@ select::-ms-expand { display: none; }
         <button id="clientLoginBtn" class="btn secondary">Entrar como Cliente</button>
         <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
       </div>
-      <div style="margin-top:10px">
-        <button id="shopAsGuestBtn" class="btn warning" style="width:100%">Comprar sem cadastro</button>
-      </div>
+      <div class="small" style="margin-top:10px;color:var(--muted)">É necessário fazer login para realizar compras.</div>
     </div>
   </div>
 </div>
@@ -318,6 +321,24 @@ select::-ms-expand { display: none; }
         </div>
       </div>
     </div>
+
+    <!-- Purchase History -->
+    <div id="purchaseHistory" style="display:none">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong>Histórico de Compras</strong>
+          <div class="small-muted">Todos os seus pedidos realizados</div>
+        </div>
+
+        <div id="historyList">
+          <div class="empty">Nenhuma compra realizada.</div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="backToTrackingBtn" class="btn secondary">Voltar para Pedidos</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -332,7 +353,7 @@ let state = {
   role: 'viewer', 
   data: { products: [], transactions: [] }, 
   adminEmail: null,
-  clientData: { orders: [] },
+  clientData: { orders: [], purchaseHistory: [] },
   cart: [],
   currentView: 'shop'
 };
@@ -404,10 +425,6 @@ el('clientRegisterBtn').onclick = ()=> {
   if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
   if(!password) return alert('Digite uma senha.');
   registerClient(email, password); 
-}
-
-el('shopAsGuestBtn').onclick = ()=> { 
-  openShopAsGuest(); 
 }
 
 // Admin registration and login
@@ -492,6 +509,7 @@ function registerClient(email, password) {
     email: email.toLowerCase(),
     password: password,
     orders: [],
+    purchaseHistory: [],
     registeredAt: Date.now()
   };
   
@@ -538,29 +556,6 @@ function loginClient(email, password) {
   } catch(e) {
     alert('Erro ao fazer login: ' + e.message);
   }
-}
-
-function openShopAsGuest() {
-  state.email = 'guest@example.com';
-  state.role = 'guest';
-  
-  // Load admin data for products
-  loadAdminProducts();
-  
-  // Show app
-  el('userEmail').textContent = 'Visitante';
-  el('userRole').textContent = ' • Convidado';
-  el('userRole').className = 'role-view';
-  el('userSubtitle').textContent = 'Loja Virtual';
-  
-  document.getElementById('loginCard').style.display='none';
-  document.getElementById('screen-root').style.display='none';
-  const app = el('app'); app.style.display = 'block';
-  el('adminPanel').style.display = 'none';
-  el('clientPanel').style.display = 'block';
-  
-  setTimeout(()=> app.style.opacity = '1',40);
-  renderClientViews();
 }
 
 function loadAdminProducts() {
@@ -611,7 +606,7 @@ el('logoutBtn').onclick = ()=> {
     role: 'viewer', 
     data: { products: [], transactions: [] }, 
     adminEmail: null,
-    clientData: { orders: [] },
+    clientData: { orders: [], purchaseHistory: [] },
     cart: [],
     currentView: 'shop'
   };
@@ -624,7 +619,7 @@ el('logoutBtn').onclick = ()=> {
 
 // Persistence
 function saveState(){
-  if(!state.email || state.role === 'guest') return;
+  if(!state.email) return;
   
   if(state.role === 'admin' || state.role === 'viewer') {
     const key = storageKey(state.role === 'admin' ? state.email : state.adminEmail);
@@ -640,6 +635,7 @@ function saveState(){
     if (stored) {
       const clientData = JSON.parse(stored);
       clientData.orders = state.clientData.orders;
+      clientData.purchaseHistory = state.clientData.purchaseHistory;
       localStorage.setItem(key, JSON.stringify(clientData));
     }
   }
@@ -895,10 +891,17 @@ function renderClientViews() {
     renderCart();
     el('shoppingArea').style.display = 'block';
     el('orderTracking').style.display = 'none';
-  } else {
+    el('purchaseHistory').style.display = 'none';
+  } else if (state.currentView === 'tracking') {
     renderClientOrders();
     el('shoppingArea').style.display = 'none';
     el('orderTracking').style.display = 'block';
+    el('purchaseHistory').style.display = 'none';
+  } else if (state.currentView === 'history') {
+    renderPurchaseHistory();
+    el('shoppingArea').style.display = 'none';
+    el('orderTracking').style.display = 'none';
+    el('purchaseHistory').style.display = 'block';
   }
 }
 
@@ -1040,11 +1043,7 @@ function renderCart() {
 el('checkoutBtn').onclick = () => {
   if (state.cart.length === 0) return alert('Carrinho vazio');
   
-  if (state.role === 'guest') {
-    openCheckoutModal();
-  } else {
-    openCheckoutModal();
-  }
+  openCheckoutModal();
 };
 
 function openCheckoutModal() {
@@ -1099,16 +1098,6 @@ function openCheckoutModal() {
           <label class="small">Endereço completo</label>
           <textarea id="checkoutAddress" class="input" placeholder="Rua, número, bairro, cidade, estado, CEP" rows="3"></textarea>
         </div>
-        <div>
-          <label class="small">E-mail</label>
-          <input id="checkoutEmail" class="input" placeholder="seu@email.com" value="${state.role === 'guest' ? '' : state.email}" ${state.role !== 'guest' ? 'readonly' : ''}>
-        </div>
-        ${state.role === 'guest' ? `
-        <div>
-          <label class="small">Senha (para criar conta)</label>
-          <input id="checkoutPassword" type="password" class="input" placeholder="Crie uma senha">
-        </div>
-        ` : ''}
       </div>
       
       <div style="margin-top:12px;display:flex;gap:8px">
@@ -1125,47 +1114,17 @@ function openCheckoutModal() {
     const name = modal.querySelector('#checkoutName').value.trim();
     const phone = modal.querySelector('#checkoutPhone').value.trim();
     const address = modal.querySelector('#checkoutAddress').value.trim();
-    const email = modal.querySelector('#checkoutEmail').value.trim();
-    const password = state.role === 'guest' ? modal.querySelector('#checkoutPassword').value : '';
     
-    if (!name || !phone || !address || !email) {
+    if (!name || !phone || !address) {
       return alert('Preencha todos os dados de entrega');
     }
     
-    if (state.role === 'guest' && !password) {
-      return alert('Crie uma senha para sua conta');
-    }
-    
-    if (state.role === 'guest' && !email.includes('@')) {
-      return alert('Digite um e-mail válido');
-    }
-    
-    confirmOrder(name, phone, address, email, password);
+    confirmOrder(name, phone, address);
     modal.remove();
   };
 }
 
-function confirmOrder(name, phone, address, email, password) {
-  // If guest, register as client
-  if (state.role === 'guest') {
-    const key = clientStorageKey(email);
-    if (localStorage.getItem(key)) {
-      return alert('Este e-mail já está registrado. Faça login primeiro.');
-    }
-    
-    const clientData = {
-      email: email.toLowerCase(),
-      password: password,
-      orders: [],
-      registeredAt: Date.now()
-    };
-    
-    localStorage.setItem(key, JSON.stringify(clientData));
-    state.email = email.toLowerCase();
-    state.role = 'client';
-    state.clientData = clientData;
-  }
-  
+function confirmOrder(name, phone, address) {
   // Create order
   const order = {
     id: uid(),
@@ -1178,29 +1137,46 @@ function confirmOrder(name, phone, address, email, password) {
       productName: item.product.name,
       quantity: item.quantity,
       unitPrice: item.product.price,
-      totalPrice: item.product.price * item.quantity
+      unitCost: item.product.cost,
+      totalPrice: item.product.price * item.quantity,
+      totalCost: item.product.cost * item.quantity,
+      profit: (item.product.price - item.product.cost) * item.quantity
     })),
     total: state.cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0),
+    totalCost: state.cart.reduce((sum, item) => sum + (item.product.cost * item.quantity), 0),
+    totalProfit: state.cart.reduce((sum, item) => sum + ((item.product.price - item.product.cost) * item.quantity), 0),
     status: 'pending',
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
   
-  // Update stock
+  // Update stock and add transaction for admin
   state.cart.forEach(item => {
     const product = state.data.products.find(p => p.id === item.product.id);
     if (product) {
       product.qty -= item.quantity;
-      addTransaction('out', item.quantity, `Venda: ${item.product.name} para ${name}`, item.product.name, product.cost, product.price);
+      // Add transaction for admin with profit calculation
+      addTransaction('out', item.quantity, `Venda: ${item.product.name} para ${name} (Cliente: ${state.email})`, item.product.name, product.cost, product.price);
     }
   });
   
   // Save admin data
   saveState();
   
-  // Add to client orders
+  // Add to client orders and purchase history
   if (state.role === 'client') {
     state.clientData.orders.push(order);
+    
+    // Add to purchase history
+    const historyEntry = {
+      orderId: order.id,
+      date: order.createdAt,
+      items: order.items,
+      total: order.total,
+      status: order.status
+    };
+    state.clientData.purchaseHistory.push(historyEntry);
+    
     const key = clientStorageKey(state.email);
     localStorage.setItem(key, JSON.stringify(state.clientData));
   }
@@ -1230,16 +1206,22 @@ function renderClientOrders() {
   
   if (state.role === 'client') {
     orders = state.clientData.orders || [];
-  } else {
-    // For guests, try to find orders by email
-    loadOrders();
-    orders = state.orders.filter(order => order.clientEmail === state.email);
   }
   
   if (orders.length === 0) {
     container.innerHTML = '<div class="empty">Nenhum pedido realizado.</div>';
     return;
   }
+  
+  // Add history button
+  const historyBtn = document.createElement('button');
+  historyBtn.className = 'btn secondary';
+  historyBtn.textContent = 'Ver Histórico Completo';
+  historyBtn.onclick = () => {
+    state.currentView = 'history';
+    renderClientViews();
+  };
+  container.appendChild(historyBtn);
   
   orders.sort((a, b) => b.createdAt - a.createdAt).forEach(order => {
     const div = document.createElement('div');
@@ -1299,6 +1281,98 @@ function renderClientOrders() {
   });
 }
 
+// Purchase History
+function renderPurchaseHistory() {
+  const container = el('historyList');
+  container.innerHTML = '';
+  
+  if (!state.clientData.purchaseHistory || state.clientData.purchaseHistory.length === 0) {
+    container.innerHTML = '<div class="empty">Nenhuma compra realizada.</div>';
+    return;
+  }
+  
+  // Group by date
+  const historyByDate = {};
+  state.clientData.purchaseHistory.forEach(entry => {
+    const date = new Date(entry.date).toLocaleDateString('pt-BR');
+    if (!historyByDate[date]) {
+      historyByDate[date] = [];
+    }
+    historyByDate[date].push(entry);
+  });
+  
+  // Render by date
+  Object.keys(historyByDate).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+    const dateHeader = document.createElement('div');
+    dateHeader.className = 'pname';
+    dateHeader.textContent = date;
+    dateHeader.style.marginTop = '16px';
+    dateHeader.style.marginBottom = '8px';
+    container.appendChild(dateHeader);
+    
+    historyByDate[date].forEach(entry => {
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+      
+      const topRow = document.createElement('div');
+      topRow.style.display = 'flex';
+      topRow.style.justifyContent = 'space-between';
+      topRow.style.alignItems = 'center';
+      topRow.style.marginBottom = '8px';
+      
+      const orderId = document.createElement('div');
+      orderId.className = 'small';
+      orderId.textContent = `Pedido #${entry.orderId.slice(-6)}`;
+      
+      const status = document.createElement('div');
+      status.className = `status-badge status-${getStatusClass(entry.status)}`;
+      status.textContent = getStatusText(entry.status);
+      
+      topRow.appendChild(orderId);
+      topRow.appendChild(status);
+      
+      const productsList = document.createElement('div');
+      productsList.className = 'history-products';
+      
+      entry.items.forEach(item => {
+        const productDiv = document.createElement('div');
+        productDiv.className = 'history-product';
+        
+        const productName = document.createElement('span');
+        productName.textContent = `${item.quantity}x ${item.productName}`;
+        
+        const productTotal = document.createElement('span');
+        productTotal.textContent = money(item.totalPrice);
+        
+        productDiv.appendChild(productName);
+        productDiv.appendChild(productTotal);
+        productsList.appendChild(productDiv);
+      });
+      
+      const totalDiv = document.createElement('div');
+      totalDiv.className = 'history-product';
+      totalDiv.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+      totalDiv.style.paddingTop = '4px';
+      totalDiv.style.marginTop = '4px';
+      totalDiv.style.fontWeight = 'bold';
+      
+      const totalLabel = document.createElement('span');
+      totalLabel.textContent = 'Total:';
+      
+      const totalValue = document.createElement('span');
+      totalValue.textContent = money(entry.total);
+      
+      totalDiv.appendChild(totalLabel);
+      totalDiv.appendChild(totalValue);
+      productsList.appendChild(totalDiv);
+      
+      historyItem.appendChild(topRow);
+      historyItem.appendChild(productsList);
+      container.appendChild(historyItem);
+    });
+  });
+}
+
 function getStatusClass(status) {
   const statusMap = {
     'pending': 'pending',
@@ -1324,6 +1398,12 @@ function getStatusText(status) {
 // Back to shop button
 el('backToShopBtn').onclick = () => {
   state.currentView = 'shop';
+  renderClientViews();
+};
+
+// Back to tracking from history
+el('backToTrackingBtn').onclick = () => {
+  state.currentView = 'tracking';
   renderClientViews();
 };
 
@@ -1366,9 +1446,15 @@ function renderOrdersManagement() {
     date.className = 'meta'; 
     date.textContent = new Date(order.createdAt).toLocaleString();
     
+    const profit = document.createElement('div');
+    profit.className = 'meta';
+    profit.style.color = 'var(--accent)';
+    profit.textContent = `Lucro: ${money(order.totalProfit)}`;
+    
     orderInfo.appendChild(name);
     orderInfo.appendChild(contact);
     orderInfo.appendChild(date);
+    orderInfo.appendChild(profit);
     
     const statusControl = document.createElement('div');
     statusControl.style.display = 'flex';
@@ -1400,6 +1486,13 @@ function renderOrdersManagement() {
           if (clientOrder) {
             clientOrder.status = order.status;
             clientOrder.updatedAt = order.updatedAt;
+            
+            // Update purchase history status
+            const historyEntry = client.purchaseHistory.find(h => h.orderId === order.id);
+            if (historyEntry) {
+              historyEntry.status = order.status;
+            }
+            
             localStorage.setItem(clientKey, JSON.stringify(client));
           }
         } catch(e) {
@@ -1421,7 +1514,7 @@ function renderOrdersManagement() {
     const total = document.createElement('div');
     total.className = 'meta';
     total.style.marginTop = '4px';
-    total.textContent = `Total: ${money(order.total)}`;
+    total.textContent = `Total: ${money(order.total)} (Custo: ${money(order.totalCost)})`;
     
     const address = document.createElement('div');
     address.className = 'meta';
