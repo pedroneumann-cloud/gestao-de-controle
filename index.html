@@ -787,18 +787,8 @@ function renderTransactions(){
 
 function updateSummary(){
   const stock = state.data.products.reduce((acc,p)=> acc + (p.qty * p.cost), 0);
-  let sold = 0;
-  let profit = 0;
-  state.data.transactions.forEach(tx=>{
-    if(tx.type === 'out'){
-      sold += (tx.qty || 0) * (tx.price || 0);
-      profit += (tx.qty || 0) * ((tx.price || 0) - (tx.cost || 0));
-    } else if (tx.type === 'sale'){
-      // 'sale' transactions store totals in price/cost
-      sold += tx.price || 0;
-      profit += ((tx.price || 0) - (tx.cost || 0));
-    }
-  });
+  const sold = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * tx.price), 0);
+  const profit = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * (tx.price - tx.cost)), 0);
   el('totalStock').textContent = money(stock);
   el('totalSold').textContent = money(sold);
   el('totalProfit').textContent = money(profit);
@@ -1207,88 +1197,85 @@ function openCheckoutModal() {
 
 
 function confirmOrder(name, phone, address) {
-  console.log('Confirmando pedido...'); // Debug log
-
-  // Create order
-  const order = {
-    id: uid(),
-    clientEmail: state.email,
-    clientName: name,
-    clientPhone: phone,
-    clientAddress: address,
-    items: state.cart.map(item => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      quantity: item.quantity,
-      unitPrice: item.product.price,
-      unitCost: item.product.cost,
-      totalPrice: item.product.price * item.quantity,
-      totalCost: item.product.cost * item.quantity,
-      profit: (item.product.price - item.product.cost) * item.quantity
-    })),
-    total: state.cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0),
-    totalCost: state.cart.reduce((sum, item) => sum + (item.product.cost * item.quantity), 0),
-    totalProfit: state.cart.reduce((sum, item) => sum + ((item.product.price - item.product.cost) * item.quantity), 0),
-    status: 'pending',
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
-
-  console.log('Pedido criado:', order); // Debug log
-
-  // Add to client orders and purchase history
-  if (state.role === 'client') {
-    state.clientData.orders.push(order);
-
-    const historyEntry = {
-      orderId: order.id,
-      date: order.createdAt,
-      items: order.items,
-      total: order.total,
-      status: order.status
-    };
-    state.clientData.purchaseHistory.push(historyEntry);
-
-    const key = clientStorageKey(state.email);
-    localStorage.setItem(key, JSON.stringify(state.clientData));
-    console.log('Dados do cliente salvos'); // Debug log
-  }
-
-  // Add to global orders
-  loadOrders();
-  state.orders.push(order);
-  saveOrders();
-  console.log('Pedidos globais salvos'); // Debug log
-
-  // ALSO add to the admin's stored data (single shop). Find first sc_user_ key and push to its data.orders
-  const adminKeys = Object.keys(localStorage).filter(k => k.startsWith('sc_user_'));
-  if (adminKeys.length > 0) {
-    try {
-      const adminKey = adminKeys[0];
-      const adminStored = JSON.parse(localStorage.getItem(adminKey) || '{"data":{"orders":[]}}');
-      adminStored.data = adminStored.data || { products: [], transactions: [], orders: [] };
-      adminStored.data.orders = adminStored.data.orders || [];
-      adminStored.data.orders.push(order);
-      localStorage.setItem(adminKey, JSON.stringify(adminStored));
-      console.log('Pedido adicionado ao admin storage:', adminKey);
-    } catch(e) {
-      console.error('Falha ao salvar pedido no admin storage', e);
+  try {
+    // Garantir loja ADM principal
+    let adminKey = Object.keys(localStorage).find(k => k.startsWith('sc_user_'));
+    if (!adminKey) {
+      adminKey = 'sc_user_mainADM';
+      const admDefault = { data: { orders: [], products: [], transactions: [] } };
+      localStorage.setItem(adminKey, JSON.stringify(admDefault));
     }
+
+    let adminData = JSON.parse(localStorage.getItem(adminKey) || '{"data":{"orders":[],"products":[],"transactions":[]}}');
+    adminData.data = adminData.data || { orders: [], products: [], transactions: [] };
+    adminData.data.orders = adminData.data.orders || [];
+
+    const order = {
+      id: uid(),
+      clientEmail: state.email,
+      clientName: name,
+      clientPhone: phone,
+      clientAddress: address,
+      items: state.cart.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+        unitCost: item.product.cost,
+        totalPrice: item.product.price * item.quantity,
+        totalCost: item.product.cost * item.quantity,
+        profit: (item.product.price - item.product.cost) * item.quantity
+      })),
+      total: state.cart.reduce((s, i) => s + (i.product.price * i.quantity), 0),
+      totalCost: state.cart.reduce((s, i) => s + (i.product.cost * i.quantity), 0),
+      totalProfit: state.cart.reduce((s, i) => s + ((i.product.price - i.product.cost) * i.quantity), 0),
+      status: 'pending',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    // Salvar pedido no ADM
+    adminData.data.orders.push(order);
+    localStorage.setItem(adminKey, JSON.stringify(adminData));
+
+    // Salvar pedido global
+    loadOrders();
+    state.orders.push(order);
+    saveOrders();
+
+    // Salvar na conta do cliente
+    if (state.role === 'client') {
+      state.clientData.orders.push(order);
+      state.clientData.purchaseHistory.push({
+        orderId: order.id,
+        date: order.createdAt,
+        items: order.items,
+        total: order.total,
+        status: order.status
+      });
+      localStorage.setItem(clientStorageKey(state.email), JSON.stringify(state.clientData));
+    }
+
+    // Feedback e redirecionamento
+    alert('✅ Pedido confirmado com sucesso!');
+    state.cart = [];
+    renderCart();
+
+    // Fechar modal se aberto
+    const modal = document.querySelector('.modal');
+    if (modal) modal.style.display = 'none';
+
+    // Redirecionar para rastreamento
+    state.currentView = 'tracking';
+    renderClientViews();
+  } catch (error) {
+    console.error('Erro ao confirmar pedido:', error);
+    alert('⚠️ Ocorreu um erro ao confirmar o pedido. Tente novamente.');
   }
-
-  // Clear cart
-  state.cart = [];
-
-  alert('Pedido realizado com sucesso! Aguarde a confirmação do pagamento.');
-  renderCart();
-
-  // Switch to order tracking
-  state.currentView = 'tracking';
-  renderClientViews();
-
-  console.log('Pedido finalizado com sucesso'); // Debug log
 }
 
+
+// Order tracking for clients
 function renderClientOrders() {
   const container = el('clientOrdersList');
   container.innerHTML = '';
@@ -1556,17 +1543,17 @@ function renderOrdersManagement() {
     statusSelect.onchange = () => {
       const newStatus = statusSelect.value;
       const oldStatus = order.status;
-
+      
       order.status = newStatus;
       order.updatedAt = Date.now();
-
+      
       // Handle profit updates when status changes to "paid"
       if (newStatus === 'paid' && oldStatus !== 'paid') {
-        // Add a sale-type transaction (summary) so profits appear immediately when marked as paid.
+        // Add profit transaction immediately when marked as paid
         addTransaction('sale', 0, `Pagamento confirmado: Pedido #${order.id.slice(-6)} - ${order.clientName}`, 'Venda', order.totalCost, order.total);
         console.log('Lucro adicionado ao marcar como Pago');
       }
-
+      
       // Handle stock updates only when delivered
       if (newStatus === 'delivered' && oldStatus !== 'delivered') {
         order.items.forEach(item => {
@@ -1577,11 +1564,11 @@ function renderOrdersManagement() {
           }
         });
       }
-
+      
       saveOrders();
       saveState();
       renderAll(); // Refresh the dashboard
-
+      
       // Update client's order status
       const clientKey = clientStorageKey(order.clientEmail);
       const clientData = localStorage.getItem(clientKey);
@@ -1592,12 +1579,12 @@ function renderOrdersManagement() {
           if (clientOrder) {
             clientOrder.status = order.status;
             clientOrder.updatedAt = order.updatedAt;
-
+            
             const historyEntry = client.purchaseHistory.find(h => h.orderId === order.id);
             if (historyEntry) {
               historyEntry.status = order.status;
             }
-
+            
             localStorage.setItem(clientKey, JSON.stringify(client));
           }
         } catch(e) {
