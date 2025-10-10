@@ -19,6 +19,7 @@
   --danger:#ff7675;
   --warning:#fdcb6e;
   --info:#74b9ff;
+  --success:#00b894;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 *{box-sizing:border-box}
@@ -84,6 +85,7 @@ a{color:inherit}
 .status-shipping{background:rgba(0,184,148,0.1);color:var(--accent)}
 .status-delivered{background:rgba(0,184,148,0.2);color:var(--accent);border:1px solid rgba(0,184,148,0.3)}
 .status-cancelled{background:rgba(255,118,117,0.1);color:var(--danger)}
+.status-paid{background:rgba(0,184,148,0.3);color:var(--success);border:1px solid rgba(0,184,148,0.5)}
 
 /* responsive */
 @media(max-width:900px){
@@ -91,6 +93,16 @@ a{color:inherit}
   .logo{width:46px;height:46px}
   .product{padding:10px}
   .center-screen{padding:18px}
+  .container{padding:12px}
+  .header{flex-direction:column;align-items:stretch;gap:8px}
+  .topbar{flex-direction:column;align-items:stretch;gap:8px}
+  .user-pill{justify-content:center;margin-top:8px}
+  .form-row{flex-direction:column;align-items:stretch}
+  .form-row > *{width:100% !important}
+  .statlist{flex-direction:column}
+  .product{flex-direction:column;align-items:stretch;gap:8px}
+  .product-actions{justify-content:center}
+  .modal{width:95%;margin:10px;padding:14px}
 }
 
 /* fix selects in chrome mobile */
@@ -112,6 +124,14 @@ select::-ms-expand { display: none; }
 
 /* phone input */
 .phone-input{font-family:monospace;letter-spacing:1px}
+
+/* mobile optimizations */
+@media(max-width:480px){
+  .login-wrap{padding:16px;margin:10px}
+  .btn{padding:12px 16px;font-size:14px}
+  .input,select,textarea{padding:12px;font-size:16px}
+  .products-list{max-height:300px}
+}
 </style>
 </head>
 <body>
@@ -330,7 +350,7 @@ select::-ms-expand { display: none; }
           <div class="empty">Nenhum pedido realizado.</div>
         </div>
 
-        <div style="margin-top:12px">
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
           <button id="viewHistoryBtn" class="btn">Ver Histórico Completo</button>
         </div>
@@ -382,13 +402,9 @@ function ordersStorageKey(){ return 'sc_orders'; }
 
 // Format phone number in real-time
 function formatPhoneNumber(value) {
-  // Remove tudo que não é número
   const numbers = value.replace(/\D/g, '');
-  
-  // Limita a 11 caracteres
   const limited = numbers.slice(0, 11);
   
-  // Aplica a formatação
   if (limited.length <= 10) {
     return limited.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
   } else {
@@ -404,16 +420,12 @@ function setupPhoneInput(inputId) {
   input.addEventListener('input', function(e) {
     const cursorPosition = e.target.selectionStart;
     const formatted = formatPhoneNumber(e.target.value);
-    
     e.target.value = formatted;
-    
-    // Mantém o cursor na posição correta
     const extraChars = formatted.length - e.target.value.length;
     e.target.setSelectionRange(cursorPosition + extraChars, cursorPosition + extraChars);
   });
   
   input.addEventListener('keydown', function(e) {
-    // Permite apenas números, backspace, delete e teclas de navegação
     if (!/[\d]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(e.key)) {
       e.preventDefault();
     }
@@ -448,7 +460,6 @@ el('adminAccessBtn').onclick = () => {
     el('adminAccessForm').style.display = 'none';
     el('adminLoginForm').style.display = 'block';
     
-    // Check if admin is already registered
     const adminKeys = Object.keys(localStorage).filter(key => key.startsWith('sc_user_'));
     if (adminKeys.length > 0) {
       el('registerBtn').style.display = 'none';
@@ -504,7 +515,6 @@ function registerAdmin(email, password) {
     return alert('Este e-mail já está registrado.');
   }
   
-  // Store admin credentials
   const adminData = {
     email: email.toLowerCase(),
     password: password,
@@ -514,8 +524,6 @@ function registerAdmin(email, password) {
   
   localStorage.setItem(key, JSON.stringify(adminData));
   alert('Conta de administrador registrada com sucesso!');
-  
-  // Hide register button after successful registration
   el('registerBtn').style.display = 'none';
 }
 
@@ -540,10 +548,8 @@ function loginAdmin(email, password) {
     state.adminEmail = state.role === 'admin' ? state.email : deriveAdminEmail(state.email);
     state.data = adminData.data || { products: [], transactions: [] };
     
-    // Load orders
     loadOrders();
     
-    // Show app
     el('userEmail').textContent = state.email;
     el('userRole').textContent = state.role === 'admin' ? ' • ADM' : '';
     el('userRole').className = state.role === 'admin' ? 'role-admin' : 'role-view';
@@ -577,7 +583,6 @@ function registerClient(email, password) {
     return alert('Este e-mail já está registrado.');
   }
   
-  // Store client credentials
   const clientData = {
     email: email.toLowerCase(),
     password: password,
@@ -608,10 +613,8 @@ function loginClient(email, password) {
     state.role = 'client';
     state.clientData = clientData;
     
-    // Load admin data for products
     loadAdminProducts();
     
-    // Show app
     el('userEmail').textContent = state.email;
     el('userRole').textContent = ' • Cliente';
     el('userRole').className = 'role-client';
@@ -632,7 +635,6 @@ function loginClient(email, password) {
 }
 
 function loadAdminProducts() {
-  // Try to find an admin account to load products from
   const adminKeys = Object.keys(localStorage).filter(key => key.startsWith('sc_user_'));
   if (adminKeys.length > 0) {
     const adminData = JSON.parse(localStorage.getItem(adminKeys[0]));
@@ -661,7 +663,6 @@ function saveOrders() {
   localStorage.setItem(ordersKey, JSON.stringify(state.orders));
 }
 
-// Determine admin mapping:
 function deriveAdminEmail(email){
   const parts = email.split('@');
   const local = parts[0] || '';
@@ -688,7 +689,6 @@ el('logoutBtn').onclick = ()=> {
   document.getElementById('screen-root').style.display='flex';
   document.getElementById('loginCard').style.display='block';
   
-  // Reset admin login form
   el('adminAccessForm').style.display = 'block';
   el('adminLoginForm').style.display = 'none';
   el('adminAccessPassword').value = '';
@@ -825,7 +825,6 @@ el('addProduct').onclick = ()=> {
   if(price < cost) return alert('Preço de venda não pode ser menor que o custo.');
   
   if(editingId){
-    // Update
     const idx = state.data.products.findIndex(p=> p.id === editingId);
     if(idx >= 0){
       state.data.products[idx] = { ...state.data.products[idx], name, cost, price, qty, cat };
@@ -833,7 +832,6 @@ el('addProduct').onclick = ()=> {
     }
     editingId = null;
   } else {
-    // Add
     const id = uid();
     state.data.products.push({ id, name, cost, price, qty, cat });
     addTransaction('in', qty, `Novo produto: ${name}`, name, cost, price);
@@ -1085,21 +1083,15 @@ function renderCart() {
   countEl.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
 }
 
-// Checkout
+// Checkout - FIXED
 el('checkoutBtn').onclick = () => {
   if (state.cart.length === 0) return alert('Carrinho vazio');
-  
   openCheckoutModal();
 };
 
 function openCheckoutModal() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
-  modal.onclick = (ev) => { 
-    if(ev.target === modal) {
-      modal.remove();
-    }
-  };
   
   let total = 0;
   state.cart.forEach(item => {
@@ -1110,7 +1102,7 @@ function openCheckoutModal() {
     <div class="modal">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <strong>Finalizar Pedido</strong>
-        <button class="icon-btn" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+        <button class="icon-btn" id="closeCheckoutModal">✕</button>
       </div>
       
       <div style="margin-bottom:12px">
@@ -1152,19 +1144,21 @@ function openCheckoutModal() {
       
       <div style="margin-top:12px;display:flex;gap:8px">
         <button id="confirmOrderBtn" class="btn primary" style="flex:1">Confirmar Pedido</button>
-        <button class="btn" onclick="this.closest('.modal-backdrop').remove()">Cancelar</button>
+        <button class="btn" id="cancelCheckoutBtn">Cancelar</button>
       </div>
     </div>
   `;
   
   document.body.appendChild(modal);
   
-  // Setup phone formatter in real-time
+  // Setup phone formatter
   setupPhoneInput('checkoutPhone');
   
-  // Add event listener for confirm order button - FIXED
-  const confirmBtn = modal.querySelector('#confirmOrderBtn');
-  confirmBtn.onclick = () => {
+  // Event listeners - FIXED
+  modal.querySelector('#closeCheckoutModal').onclick = () => modal.remove();
+  modal.querySelector('#cancelCheckoutBtn').onclick = () => modal.remove();
+  
+  modal.querySelector('#confirmOrderBtn').onclick = () => {
     const name = modal.querySelector('#checkoutName').value.trim();
     const phone = modal.querySelector('#checkoutPhone').value.trim();
     const address = modal.querySelector('#checkoutAddress').value.trim();
@@ -1208,13 +1202,15 @@ function confirmOrder(name, phone, address) {
     updatedAt: Date.now()
   };
   
-  // Update stock and add transaction for admin
+  // Update stock - REMOVED the stock update here to allow multiple orders
+  // Stock will be updated only when status changes to "entregue"
+  
+  // Add transaction for admin
   state.cart.forEach(item => {
     const product = state.data.products.find(p => p.id === item.product.id);
     if (product) {
-      product.qty -= item.quantity;
-      // Add transaction for admin with profit calculation
-      addTransaction('out', item.quantity, `Venda: ${item.product.name} para ${name} (Cliente: ${state.email})`, item.product.name, product.cost, product.price);
+      // Don't update stock here - just record the transaction
+      addTransaction('reserved', item.quantity, `Pedido reservado: ${item.product.name} para ${name} (Cliente: ${state.email})`, item.product.name, product.cost, product.price);
     }
   });
   
@@ -1225,7 +1221,6 @@ function confirmOrder(name, phone, address) {
   if (state.role === 'client') {
     state.clientData.orders.push(order);
     
-    // Add to purchase history
     const historyEntry = {
       orderId: order.id,
       date: order.createdAt,
@@ -1247,7 +1242,7 @@ function confirmOrder(name, phone, address) {
   // Clear cart
   state.cart = [];
   
-  alert('Pedido realizado com sucesso!');
+  alert('Pedido realizado com sucesso! Aguarde a confirmação do pagamento.');
   renderCart();
   
   // Switch to order tracking
@@ -1339,7 +1334,6 @@ function renderPurchaseHistory() {
     return;
   }
   
-  // Group by date
   const historyByDate = {};
   state.clientData.purchaseHistory.forEach(entry => {
     const date = new Date(entry.date).toLocaleDateString('pt-BR');
@@ -1349,7 +1343,6 @@ function renderPurchaseHistory() {
     historyByDate[date].push(entry);
   });
   
-  // Render by date
   Object.keys(historyByDate).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
     const dateHeader = document.createElement('div');
     dateHeader.className = 'pname';
@@ -1424,6 +1417,7 @@ function renderPurchaseHistory() {
 function getStatusClass(status) {
   const statusMap = {
     'pending': 'pending',
+    'paid': 'paid',
     'preparing': 'preparing',
     'shipping': 'shipping',
     'delivered': 'delivered',
@@ -1435,6 +1429,7 @@ function getStatusClass(status) {
 function getStatusText(status) {
   const statusMap = {
     'pending': 'Pendente',
+    'paid': 'Pago',
     'preparing': 'Em preparação',
     'shipping': 'A caminho',
     'delivered': 'Entregue',
@@ -1513,6 +1508,7 @@ function renderOrdersManagement() {
     statusSelect.className = 'input select-dark';
     statusSelect.innerHTML = `
       <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendente</option>
+      <option value="paid" ${order.status === 'paid' ? 'selected' : ''}>Pago</option>
       <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Em preparação</option>
       <option value="shipping" ${order.status === 'shipping' ? 'selected' : ''}>A caminho</option>
       <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Entregue</option>
@@ -1520,11 +1516,34 @@ function renderOrdersManagement() {
     `;
     
     statusSelect.onchange = () => {
-      order.status = statusSelect.value;
-      order.updatedAt = Date.now();
-      saveOrders();
+      const newStatus = statusSelect.value;
+      const oldStatus = order.status;
       
-      // Update client's order status if they have an account
+      order.status = newStatus;
+      order.updatedAt = Date.now();
+      
+      // Handle stock and profit updates
+      if (newStatus === 'paid' && oldStatus !== 'paid') {
+        // Add profit when status changes to "paid"
+        addTransaction('sale', 0, `Pagamento confirmado: Pedido #${order.id.slice(-6)} - ${order.clientName}`, 'Venda', 0, order.totalProfit);
+      }
+      
+      if (newStatus === 'delivered' && oldStatus !== 'delivered') {
+        // Update stock only when delivered
+        order.items.forEach(item => {
+          const product = state.data.products.find(p => p.id === item.productId);
+          if (product) {
+            product.qty -= item.quantity;
+            addTransaction('out', item.quantity, `Entrega realizada: ${item.productName} para ${order.clientName}`, item.productName, item.unitCost, item.unitPrice);
+          }
+        });
+      }
+      
+      saveOrders();
+      saveState();
+      renderAll();
+      
+      // Update client's order status
       const clientKey = clientStorageKey(order.clientEmail);
       const clientData = localStorage.getItem(clientKey);
       if (clientData) {
@@ -1535,7 +1554,6 @@ function renderOrdersManagement() {
             clientOrder.status = order.status;
             clientOrder.updatedAt = order.updatedAt;
             
-            // Update purchase history status
             const historyEntry = client.purchaseHistory.find(h => h.orderId === order.id);
             if (historyEntry) {
               historyEntry.status = order.status;
@@ -1581,7 +1599,6 @@ function renderOrdersManagement() {
 
 // Initialize
 window.onload = () => {
-  // Render orders management for admin
   if (state.role === 'admin') {
     renderOrdersManagement();
   }
