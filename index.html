@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sistema de Controle — Pro Final</title>
+<title>Sistema de Compra</title>
 <style>
 :root{
   --bg:#050505;
@@ -106,6 +106,9 @@ select::-ms-expand { display: none; }
 .history-date{font-size:12px;color:var(--muted)}
 .history-products{margin-top:6px}
 .history-product{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+
+/* admin access */
+.admin-access{display:none;margin-top:12px}
 </style>
 </head>
 <body>
@@ -114,47 +117,58 @@ select::-ms-expand { display: none; }
   <!-- LOGIN -->
   <div class="login-wrap card" id="loginCard" style="transform:translateY(8px);opacity:0;transition:all .45s cubic-bezier(.2,.9,.25,1)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="brand"><div class="logo">SC</div><div><div class="login-title">Sistema de Controle</div><div class="subtle">Escolha seu tipo de acesso</div></div></div>
+      <div class="brand"><div class="logo">SC</div><div><div class="login-title">Sistema de Compra</div><div class="subtle">Escolha seu tipo de acesso</div></div></div>
       <div class="small-muted">Profissional • Dark</div>
     </div>
 
     <div class="tabs" id="loginTabs">
-      <div class="tab active" data-tab="admin">Administrador</div>
-      <div class="tab" data-tab="client">Cliente</div>
-    </div>
-
-    <!-- Admin Login -->
-    <div id="adminLogin" style="display:block">
-      <div style="margin-top:8px">
-        <label class="small">E-mail</label>
-        <input id="loginEmail" class="input" placeholder="ex: pedroneumann@gmail.com" autocomplete="email"/>
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Senha</label>
-        <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button id="loginBtn" class="btn primary">Entrar</button>
-        <button id="registerBtn" class="btn">Registrar</button>
-        <button id="demoBtn" class="btn">Entrar como demo</button>
-      </div>
+      <div class="tab active" data-tab="client">Cliente</div>
+      <div class="tab" data-tab="admin">Administrador</div>
     </div>
 
     <!-- Client Login -->
-    <div id="clientLogin" style="display:none">
+    <div id="clientLogin" style="display:block">
       <div style="margin-top:8px">
         <label class="small">E-mail</label>
-        <input id="clientEmail" class="input" placeholder="ex: cliente@gmail.com" autocomplete="email"/>
+        <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email"/>
       </div>
       <div style="margin-top:8px">
         <label class="small">Senha</label>
         <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
       </div>
       <div style="margin-top:10px;display:flex;gap:8px">
-        <button id="clientLoginBtn" class="btn secondary">Entrar como Cliente</button>
+        <button id="clientLoginBtn" class="btn primary">Entrar como Cliente</button>
         <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
       </div>
       <div class="small" style="margin-top:10px;color:var(--muted)">É necessário fazer login para realizar compras.</div>
+    </div>
+
+    <!-- Admin Login -->
+    <div id="adminLogin" style="display:none">
+      <div id="adminAccessForm">
+        <div style="margin-top:8px">
+          <label class="small">Senha de Acesso ADM</label>
+          <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM"/>
+        </div>
+        <div style="margin-top:10px">
+          <button id="adminAccessBtn" class="btn primary">Acessar Painel ADM</button>
+        </div>
+      </div>
+
+      <div id="adminLoginForm" class="admin-access">
+        <div style="margin-top:8px">
+          <label class="small">E-mail</label>
+          <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email"/>
+        </div>
+        <div style="margin-top:8px">
+          <label class="small">Senha</label>
+          <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button id="loginBtn" class="btn primary">Entrar</button>
+          <button id="registerBtn" class="btn">Registrar ADM</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -163,14 +177,11 @@ select::-ms-expand { display: none; }
 <div class="container" id="app" style="display:none;opacity:0;transition:opacity .35s">
   <div class="header card topbar">
     <div style="display:flex;align-items:center;gap:12px">
-      <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Controle</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
+      <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Compra</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="user-pill" id="userInfo"><div class="small-muted">Logado como:</div><div id="userEmail" style="font-weight:800"></div><div id="userRole" class="role-view"></div></div>
       <div style="display:flex;gap:8px">
-        <button id="exportBtn" class="btn">Exportar</button>
-        <label for="fileInput" class="btn">Importar</label>
-        <input id="fileInput" type="file" style="display:none" accept="application/json" />
         <button id="logoutBtn" class="btn">Sair</button>
       </div>
     </div>
@@ -366,6 +377,34 @@ function clientStorageKey(email){ return 'sc_client_' + email.toLowerCase(); }
 function ordersStorageKey(){ return 'sc_orders'; }
 function normalizeLocal(local){ return local.replace(/\W/g,'').toLowerCase(); }
 
+// Format phone number
+function formatPhoneNumber(phone) {
+  // Remove tudo que não é número
+  phone = phone.replace(/\D/g, '');
+  
+  // Formata conforme o tamanho
+  if (phone.length === 11) {
+    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  } else if (phone.length === 10) {
+    return phone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  } else {
+    return phone;
+  }
+}
+
+// Phone input formatter
+function setupPhoneFormatter(inputId) {
+  const input = el(inputId);
+  if (input) {
+    input.addEventListener('input', function(e) {
+      const formatted = formatPhoneNumber(e.target.value);
+      if (formatted !== e.target.value) {
+        e.target.value = formatted;
+      }
+    });
+  }
+}
+
 // Login animations
 function showLoginAnimation(){ const card = el('loginCard'); setTimeout(()=>{ card.style.transform='translateY(0)'; card.style.opacity='1'; },80); }
 showLoginAnimation();
@@ -387,6 +426,23 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+// Admin access password
+el('adminAccessBtn').onclick = () => {
+  const password = el('adminAccessPassword').value;
+  if (password === 'Lucãoadm') {
+    el('adminAccessForm').style.display = 'none';
+    el('adminLoginForm').style.display = 'block';
+    
+    // Check if admin is already registered
+    const adminKeys = Object.keys(localStorage).filter(key => key.startsWith('sc_user_'));
+    if (adminKeys.length > 0) {
+      el('registerBtn').style.display = 'none';
+    }
+  } else {
+    alert('Senha de acesso ADM incorreta!');
+  }
+};
+
 // Login handlers
 el('loginBtn').onclick = ()=> { 
   const email = el('loginEmail').value.trim(); 
@@ -402,13 +458,6 @@ el('registerBtn').onclick = ()=> {
   if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
   if(!password) return alert('Digite uma senha.');
   registerAdmin(email, password); 
-}
-
-el('demoBtn').onclick = ()=> { 
-  const email = 'pedroneumannADM@example.com'; 
-  el('loginEmail').value = email; 
-  el('loginPassword').value = 'demo123';
-  loginAdmin(email, 'demo123'); 
 }
 
 el('clientLoginBtn').onclick = ()=> { 
@@ -444,6 +493,9 @@ function registerAdmin(email, password) {
   
   localStorage.setItem(key, JSON.stringify(adminData));
   alert('Conta de administrador registrada com sucesso!');
+  
+  // Hide register button after successful registration
+  el('registerBtn').style.display = 'none';
 }
 
 function loginAdmin(email, password) {
@@ -614,6 +666,14 @@ el('logoutBtn').onclick = ()=> {
   el('app').style.opacity = '0';
   document.getElementById('screen-root').style.display='flex';
   document.getElementById('loginCard').style.display='block';
+  
+  // Reset admin login form
+  el('adminAccessForm').style.display = 'block';
+  el('adminLoginForm').style.display = 'none';
+  el('adminAccessPassword').value = '';
+  el('loginEmail').value = '';
+  el('loginPassword').value = '';
+  
   showLoginAnimation();
 }
 
@@ -720,8 +780,6 @@ function applyRoleRestrictions(){
   el('addProduct').disabled = !isAdmin;
   el('resetForm').disabled = !isAdmin;
   el('applyOp').disabled = !isAdmin;
-  el('exportBtn').disabled = false;
-  el('fileInput').disabled = !isAdmin;
 }
 
 function renderAll(){
@@ -822,39 +880,6 @@ function addTransaction(type, qty, details, productName, cost, price){
     ts: Date.now(),
     type, qty, details, productName, cost, price
   });
-}
-
-// Export / Import
-el('exportBtn').onclick = ()=> {
-  const dataStr = JSON.stringify(state.data, null, 2);
-  const blob = new Blob([dataStr], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `estoque_${state.email}_${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-el('fileInput').onchange = (ev)=> {
-  if(!state.role === 'admin') return alert('Apenas administradores podem importar.');
-  const file = ev.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (e)=> {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if(!imported.products || !imported.transactions) throw new Error('Formato inválido.');
-      state.data = imported;
-      saveState();
-      renderAll();
-      alert('Dados importados com sucesso.');
-    } catch(err){
-      alert('Erro ao importar: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  ev.target.value = '';
 }
 
 // Modal
@@ -1109,15 +1134,21 @@ function openCheckoutModal() {
   
   document.body.appendChild(modal);
   
+  // Setup phone formatter
+  setupPhoneFormatter('checkoutPhone');
+  
   // Add event listener for confirm order button
   modal.querySelector('#confirmOrderBtn').onclick = () => {
     const name = modal.querySelector('#checkoutName').value.trim();
-    const phone = modal.querySelector('#checkoutPhone').value.trim();
+    let phone = modal.querySelector('#checkoutPhone').value.trim();
     const address = modal.querySelector('#checkoutAddress').value.trim();
     
     if (!name || !phone || !address) {
       return alert('Preencha todos os dados de entrega');
     }
+    
+    // Format phone number
+    phone = formatPhoneNumber(phone);
     
     confirmOrder(name, phone, address);
     modal.remove();
