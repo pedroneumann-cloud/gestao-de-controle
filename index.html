@@ -787,8 +787,18 @@ function renderTransactions(){
 
 function updateSummary(){
   const stock = state.data.products.reduce((acc,p)=> acc + (p.qty * p.cost), 0);
-  const sold = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * tx.price), 0);
-  const profit = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * (tx.price - tx.cost)), 0);
+  let sold = 0;
+  let profit = 0;
+  state.data.transactions.forEach(tx=>{
+    if(tx.type === 'out'){
+      sold += (tx.qty || 0) * (tx.price || 0);
+      profit += (tx.qty || 0) * ((tx.price || 0) - (tx.cost || 0));
+    } else if (tx.type === 'sale'){
+      // 'sale' transactions store totals in price/cost
+      sold += tx.price || 0;
+      profit += ((tx.price || 0) - (tx.cost || 0));
+    }
+  });
   el('totalStock').textContent = money(stock);
   el('totalSold').textContent = money(sold);
   el('totalProfit').textContent = money(profit);
@@ -1195,9 +1205,10 @@ function openCheckoutModal() {
   }
 }
 
+
 function confirmOrder(name, phone, address) {
   console.log('Confirmando pedido...'); // Debug log
-  
+
   // Create order
   const order = {
     id: uid(),
@@ -1222,13 +1233,13 @@ function confirmOrder(name, phone, address) {
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
-  
+
   console.log('Pedido criado:', order); // Debug log
-  
+
   // Add to client orders and purchase history
   if (state.role === 'client') {
     state.clientData.orders.push(order);
-    
+
     const historyEntry = {
       orderId: order.id,
       date: order.createdAt,
@@ -1237,32 +1248,47 @@ function confirmOrder(name, phone, address) {
       status: order.status
     };
     state.clientData.purchaseHistory.push(historyEntry);
-    
+
     const key = clientStorageKey(state.email);
     localStorage.setItem(key, JSON.stringify(state.clientData));
     console.log('Dados do cliente salvos'); // Debug log
   }
-  
+
   // Add to global orders
   loadOrders();
   state.orders.push(order);
   saveOrders();
   console.log('Pedidos globais salvos'); // Debug log
-  
+
+  // ALSO add to the admin's stored data (single shop). Find first sc_user_ key and push to its data.orders
+  const adminKeys = Object.keys(localStorage).filter(k => k.startsWith('sc_user_'));
+  if (adminKeys.length > 0) {
+    try {
+      const adminKey = adminKeys[0];
+      const adminStored = JSON.parse(localStorage.getItem(adminKey) || '{"data":{"orders":[]}}');
+      adminStored.data = adminStored.data || { products: [], transactions: [], orders: [] };
+      adminStored.data.orders = adminStored.data.orders || [];
+      adminStored.data.orders.push(order);
+      localStorage.setItem(adminKey, JSON.stringify(adminStored));
+      console.log('Pedido adicionado ao admin storage:', adminKey);
+    } catch(e) {
+      console.error('Falha ao salvar pedido no admin storage', e);
+    }
+  }
+
   // Clear cart
   state.cart = [];
-  
+
   alert('Pedido realizado com sucesso! Aguarde a confirmação do pagamento.');
   renderCart();
-  
+
   // Switch to order tracking
   state.currentView = 'tracking';
   renderClientViews();
-  
+
   console.log('Pedido finalizado com sucesso'); // Debug log
 }
 
-// Order tracking for clients
 function renderClientOrders() {
   const container = el('clientOrdersList');
   container.innerHTML = '';
@@ -1530,17 +1556,17 @@ function renderOrdersManagement() {
     statusSelect.onchange = () => {
       const newStatus = statusSelect.value;
       const oldStatus = order.status;
-      
+
       order.status = newStatus;
       order.updatedAt = Date.now();
-      
+
       // Handle profit updates when status changes to "paid"
       if (newStatus === 'paid' && oldStatus !== 'paid') {
-        // Add profit transaction immediately when marked as paid
+        // Add a sale-type transaction (summary) so profits appear immediately when marked as paid.
         addTransaction('sale', 0, `Pagamento confirmado: Pedido #${order.id.slice(-6)} - ${order.clientName}`, 'Venda', order.totalCost, order.total);
         console.log('Lucro adicionado ao marcar como Pago');
       }
-      
+
       // Handle stock updates only when delivered
       if (newStatus === 'delivered' && oldStatus !== 'delivered') {
         order.items.forEach(item => {
@@ -1551,11 +1577,11 @@ function renderOrdersManagement() {
           }
         });
       }
-      
+
       saveOrders();
       saveState();
       renderAll(); // Refresh the dashboard
-      
+
       // Update client's order status
       const clientKey = clientStorageKey(order.clientEmail);
       const clientData = localStorage.getItem(clientKey);
@@ -1566,12 +1592,12 @@ function renderOrdersManagement() {
           if (clientOrder) {
             clientOrder.status = order.status;
             clientOrder.updatedAt = order.updatedAt;
-            
+
             const historyEntry = client.purchaseHistory.find(h => h.orderId === order.id);
             if (historyEntry) {
               historyEntry.status = order.status;
             }
-            
+
             localStorage.setItem(clientKey, JSON.stringify(client));
           }
         } catch(e) {
