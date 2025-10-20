@@ -1607,13 +1607,23 @@ renderAll = function() {
   }
 };
 </script>
-<!-- Firebase integration (added by assistant) -->
+
+
+
+
+
+
+
+
+
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  // Importações
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
   import { initializeFirestore, getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-
+  
   // Firebase config (for your project)
   const firebaseConfig = {
     apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
@@ -1625,10 +1635,23 @@ renderAll = function() {
     measurementId: "G-5NL2Z4D91B"
   };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+  // ----------------------------------------------------------------------
+  // 💥 CORREÇÃO PARA EVITAR O ERRO 'duplicate-app' 💥
+  // Inicializa a aplicação Firebase APENAS se ela não foi inicializada antes.
+  // ----------------------------------------------------------------------
+  let app;
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log("[Firebase] Aplicativo inicializado com sucesso (DEFAULT).");
+  } else {
+    // Se já existe, pega a primeira instância (a padrão)
+    app = getApps()[0]; 
+    console.log("[Firebase] Aplicativo já estava inicializado (DEFAULT).");
+  }
+  // ----------------------------------------------------------------------
+  
   try { getAnalytics(app); } catch(e) { /* ignore if analytics not allowed */ }
-
+  
   // Try to enable persistent local cache, otherwise fallback
   let db;
   try {
@@ -1758,9 +1781,12 @@ renderAll = function() {
 
   // Expose helpers for debugging on window
   window.__LS_FIREBASE = { db, auth, ensureShop, migrateLocalToFirestore, SHOP_ID };
-
 </script>
-<!-- End Firebase integration -->
+
+
+
+
+
 
 </body>
 </html>
