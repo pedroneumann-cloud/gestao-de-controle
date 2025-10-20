@@ -509,160 +509,241 @@ el('viewHistoryBtn').onclick = () => {
   renderClientViews();
 };
 
-// Admin registration and login
+
+
+// NOVO: Admin registration (usando Firebase Auth e Firestore)
 function registerAdmin(email, password) {
-  const key = storageKey(email);
-  if(localStorage.getItem(key)) {
-    return alert('Este e-mail já está registrado.');
-  }
-  
-  const adminData = {
-    email: email.toLowerCase(),
-    password: password,
-    data: { products: [], transactions: [] },
-    registeredAt: Date.now()
-  };
-  
-  localStorage.setItem(key, JSON.stringify(adminData));
-  alert('Conta de administrador registrada com sucesso!');
-  el('registerBtn').style.display = 'none';
+  // 1. Cria o usuário no Firebase Authentication
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      
+      // 2. SALVA o papel de 'admin' no Firestore na coleção 'users'
+      const userDocRef = doc(db, "users", user.uid);
+      setDoc(userDocRef, { 
+        role: 'admin', 
+        email: email.toLowerCase() 
+      })
+      .then(() => {
+        alert('Conta de administrador registrada com sucesso no Firebase!');
+        el('registerBtn').style.display = 'none'; // Mantém a UI existente
+      })
+      .catch((firestoreError) => {
+        console.error("Erro ao salvar role ADM no Firestore:", firestoreError);
+        alert('Conta ADM criada, mas houve erro ao salvar o papel.');
+      });
+    })
+    .catch((error) => {
+      // 3. Trata erros do Firebase
+      console.error("Erro no registro de ADM:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        alert('Este e-mail já está registrado. Tente fazer login.');
+      } else if (error.code === 'auth/weak-password') {
+         alert('A senha deve ter pelo menos 6 caracteres.');
+      } else {
+        alert('Erro ao registrar ADM: ' + error.message);
+      }
+    });
 }
 
-function loginAdmin(email, password) {
-  const key = storageKey(email);
-  const stored = localStorage.getItem(key);
-  
-  if(!stored) {
-    return alert('E-mail não encontrado. Registre-se primeiro.');
-  }
-  
-  try {
-    const adminData = JSON.parse(stored);
-    if(adminData.password !== password) {
-      return alert('Senha incorreta.');
-    }
-    
-    state.email = email.toLowerCase();
-    const parts = state.email.split('@');
-    const local = parts[0];
-    state.role = /adm/i.test(local) ? 'admin' : 'viewer';
-    state.adminEmail = state.role === 'admin' ? state.email : deriveAdminEmail(state.email);
-    state.data = adminData.data || { products: [], transactions: [] };
-    
-    loadOrders();
-    
-    el('userEmail').textContent = state.email;
-    el('userRole').textContent = state.role === 'admin' ? ' • ADM' : '';
-    el('userRole').className = state.role === 'admin' ? 'role-admin' : 'role-view';
-    el('userSubtitle').textContent = 'Painel de Administração';
-    
-    document.getElementById('loginCard').style.display='none';
-    document.getElementById('screen-root').style.display='none';
-    const app = el('app'); app.style.display = 'block';
-    el('adminPanel').style.display = 'block';
-    el('clientPanel').style.display = 'none';
-    
-    setTimeout(()=> app.style.opacity = '1',40);
-    applyRoleRestrictions();
-    renderAll();
-    
-    if(state.role === 'viewer'){
-      el('notice').style.display = 'block';
-      el('notice').textContent = `Você está visualizando o estoque do administrador ${state.adminEmail} (modo leitura).`;
-    } else {
-      el('notice').style.display = 'none';
-    }
-  } catch(e) {
-    alert('Erro ao fazer login: ' + e.message);
-  }
-}
 
-// Client registration and login
+// Client registration and login (NOVO: Usando Firebase Auth)
+
+// Cliente Register
 function registerClient(email, password) {
-  const key = clientStorageKey(email);
-  if(localStorage.getItem(key)) {
-    return alert('Este e-mail já está registrado.');
-  }
-  
-  const clientData = {
-    email: email.toLowerCase(),
-    password: password,
-    orders: [],
-    purchaseHistory: [],
-    registeredAt: Date.now()
-  };
-  
-  localStorage.setItem(key, JSON.stringify(clientData));
-  alert('Conta de cliente registrada com sucesso!');
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      // O usuário foi criado com sucesso no Firebase
+      alert('Conta de cliente registrada com sucesso no Firebase!');
+      // Não é mais necessário salvar clientData no localStorage.
+      
+      // Opcional: Aqui você pode salvar dados adicionais do cliente no Firestore se necessário.
+      // Ex: setDoc(doc(db, "clients", userCredential.user.uid), { /* seus dados aqui */ });
+
+    })
+    .catch((error) => {
+      // Trata erros do Firebase
+      console.error("Erro no registro de Cliente:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        alert('Este e-mail já está registrado. Tente fazer login.');
+      } else if (error.code === 'auth/weak-password') {
+         alert('A senha deve ter pelo menos 6 caracteres.');
+      } else {
+        alert('Erro ao registrar Cliente: ' + error.message);
+      }
+    });
 }
 
+// Cliente Login
 function loginClient(email, password) {
-  const key = clientStorageKey(email);
-  const stored = localStorage.getItem(key);
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      // Cliente autenticado com sucesso
+      state.email = email.toLowerCase();
+      state.role = 'client';
+      
+      // O state.clientData e orders/purchaseHistory devem ser carregados do Firestore
+      // Se necessário, chame uma nova função aqui: loadClientDataFromFirestore(userCredential.user.uid);
+      
+      // Chama a função de carregamento de produtos (que precisa ser corrigida na próxima etapa)
+      loadAdminProducts(); 
+      
+      // Atualização da UI (mantida a sua lógica original)
+      el('userEmail').textContent = state.email;
+      el('userRole').textContent = ' • Cliente';
+      el('userRole').className = 'role-client';
+      el('userSubtitle').textContent = 'Área do Cliente';
+      
+      document.getElementById('loginCard').style.display='none';
+      document.getElementById('screen-root').style.display='none';
+      const app = el('app'); app.style.display = 'block';
+      el('adminPanel').style.display = 'none';
+      el('clientPanel').style.display = 'block';
+      
+      setTimeout(()=> app.style.opacity = '1',40);
+      renderClientViews();
+      
+    })
+    .catch((error) => {
+      // Trata erros de login
+      console.error("Erro no login de Cliente:", error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        alert('E-mail ou senha inválidos.');
+      } else {
+        alert('Erro ao fazer login: ' + error.message);
+      }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// NOVO: loadAdminProducts() (usando Firestore)
+async function loadAdminProducts() {
+  log('[STORE] Loading admin products from Firestore...');
   
-  if(!stored) {
-    return alert('E-mail não encontrado. Registre-se primeiro.');
-  }
-  
+  // 1. CARREGA DADOS DA COLEÇÃO 'products'
   try {
-    const clientData = JSON.parse(stored);
-    if(clientData.password !== password) {
-      return alert('Senha incorreta.');
-    }
+    const productsCollectionRef = collection(db, 'shops', SHOP_ID, 'products');
+    const querySnapshot = await getDocs(productsCollectionRef);
     
-    state.email = email.toLowerCase();
-    state.role = 'client';
-    state.clientData = clientData;
+    // 2. Converte os documentos do Firestore para o formato da sua lista
+    const loadedProducts = [];
+    querySnapshot.forEach((doc) => {
+      loadedProducts.push({
+        id: doc.id, // O ID do documento Firestore é crucial para futuras atualizações
+        ...doc.data()
+      });
+    });
+
+    // 3. ATUALIZA O SEU STATE PRINCIPAL com os dados da nuvem
+    state.adminProducts = loadedProducts; 
     
-    loadAdminProducts();
-    
-    el('userEmail').textContent = state.email;
-    el('userRole').textContent = ' • Cliente';
-    el('userRole').className = 'role-client';
-    el('userSubtitle').textContent = 'Área do Cliente';
-    
-    document.getElementById('loginCard').style.display='none';
-    document.getElementById('screen-root').style.display='none';
-    const app = el('app'); app.style.display = 'block';
-    el('adminPanel').style.display = 'none';
-    el('clientPanel').style.display = 'block';
-    
-    setTimeout(()=> app.style.opacity = '1',40);
-    renderClientViews();
-    
-  } catch(e) {
-    alert('Erro ao fazer login: ' + e.message);
+    // Mantém a compatibilidade com a antiga estrutura de dados do state, se usada em outras partes
+    if(!state.data) state.data = {};
+    state.data.products = loadedProducts;
+
+    log(`[STORE] Loaded ${state.adminProducts.length} products from Firestore.`);
+
+  } catch (error) {
+    console.error("[FIRESTORE ERROR] Falha ao carregar produtos:", error);
+    // Em caso de erro, inicia com lista vazia.
+    state.adminProducts = []; 
   }
 }
-
-function loadAdminProducts() {
-  const adminKeys = Object.keys(localStorage).filter(key => key.startsWith('sc_user_'));
-  if (adminKeys.length > 0) {
-    const adminData = JSON.parse(localStorage.getItem(adminKeys[0]));
-    if (adminData && adminData.data) {
-      state.data = adminData.data;
-    }
+// NOVO: loadOrders() (usando Firestore)
+async function loadOrders() {
+  log('[STORE] Loading orders from Firestore...');
+  
+  // O UID do usuário autenticado (ADM ou Cliente)
+  const userId = auth.currentUser ? auth.currentUser.uid : null; 
+  if (!userId) {
+    state.orders = [];
+    return log('Cannot load orders: User not authenticated.');
   }
-}
 
-function loadOrders() {
-  const ordersKey = ordersStorageKey();
-  const stored = localStorage.getItem(ordersKey);
-  if (stored) {
-    try {
-      state.orders = JSON.parse(stored);
-    } catch(e) {
-      state.orders = [];
+  try {
+    const ordersCollectionRef = collection(db, 'shops', SHOP_ID, 'orders');
+    let q = query(ordersCollectionRef, orderBy('createdAt', 'desc'));
+    
+    // Se for Cliente, filtra apenas os pedidos dele
+    if (state.role === 'client') {
+      q = query(q, where('clientId', '==', userId)); 
     }
-  } else {
+    
+    const querySnapshot = await getDocs(q);
+    
+    const loadedOrders = [];
+    querySnapshot.forEach((doc) => {
+      loadedOrders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    state.orders = loadedOrders;
+    log(`[STORE] Loaded ${state.orders.length} orders from Firestore. Role: ${state.role}`);
+
+  } catch (e) {
+    console.error('[FIRESTORE ERROR] Falha ao carregar pedidos:', e);
     state.orders = [];
   }
+// NOVO: saveOrders() (usando Firestore)
+async function saveOrders() {
+  log('[STORE] Saving orders to Firestore...');
+  
+  // Esta lógica assume que 'state.orders' é a lista completa de pedidos.
+  // A melhor prática é salvar cada pedido individualmente ou apenas os novos/atualizados.
+  
+  const ordersCollectionRef = collection(db, 'shops', SHOP_ID, 'orders');
+
+  try {
+    // ⚠️ ATENÇÃO: Se state.orders for muito grande, esta operação pode ser lenta. 
+    // O ideal é usar esta função para salvar *novos* pedidos, usando addDoc.
+    
+    // EX: Salva todos os pedidos no Firestore (NÃO RECOMENDADO SE FOR GRANDE)
+    // Para simplificar: vamos salvar CADA pedido no Firestore.
+    
+    // Limpar e resalvar a coleção é ineficiente. Vamos garantir que o último pedido seja salvo:
+    
+    if (state.orders.length === 0) return;
+    
+    // Encontra o último pedido (o mais provável de ter sido atualizado)
+    const lastOrder = state.orders[state.orders.length - 1]; 
+    
+    if (lastOrder.id) {
+        // Se já tem ID, atualiza o documento existente
+        const docRef = doc(ordersCollectionRef, lastOrder.id);
+        await updateDoc(docRef, lastOrder);
+        log(`[STORE] Updated existing order: ${lastOrder.id}`);
+    } else {
+        // Se não tem ID, salva como novo documento
+        const docRef = await addDoc(ordersCollectionRef, Object.assign({}, lastOrder, { 
+            createdAt: serverTimestamp(), // Usa timestamp do servidor
+            clientId: auth.currentUser ? auth.currentUser.uid : 'anonymous' // Associa ao usuário logado
+        }));
+        // Atualiza o state local com o novo ID do Firestore
+        state.orders[state.orders.length - 1].id = docRef.id;
+        log(`[STORE] Saved new order with ID: ${docRef.id}`);
+    }
+
+  } catch (e) {
+    console.error('[FIRESTORE ERROR] Falha ao salvar pedidos:', e);
+    alert('Erro ao salvar pedidos. Verifique o console para detalhes.');
+  }
 }
 
-function saveOrders() {
-  const ordersKey = ordersStorageKey();
-  localStorage.setItem(ordersKey, JSON.stringify(state.orders));
-}
+
 
 function deriveAdminEmail(email){
   const parts = email.split('@');
