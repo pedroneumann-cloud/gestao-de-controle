@@ -1694,19 +1694,15 @@ renderAll = function() {
 
 
 
-
-
-
-
 <script type="module">
-  // Importações
-  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-  import { initializeFirestore, getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-  
-  // Firebase config (for your project)
-  const firebaseConfig = {
+// Importações
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+import { initializeFirestore, getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+// Firebase config (for your project)
+const firebaseConfig = {
     apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
     authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
     projectId: "banco-de-dados-4dd4d",
@@ -1714,156 +1710,240 @@ renderAll = function() {
     messagingSenderId: "1002214156963",
     appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
     measurementId: "G-5NL2Z4D91B"
-  };
+};
 
-  // ----------------------------------------------------------------------
-  // 💥 CORREÇÃO PARA EVITAR O ERRO 'duplicate-app' 💥
-  // Inicializa a aplicação Firebase APENAS se ela não foi inicializada antes.
-  // ----------------------------------------------------------------------
-  let app;
-  if (getApps().length === 0) {
+// ----------------------------------------------------------------------
+// 💥 CORREÇÃO PARA EVITAR O ERRO 'duplicate-app' 💥
+// Inicializa a aplicação Firebase APENAS se ela não foi inicializada antes.
+// ----------------------------------------------------------------------
+let app;
+if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
     console.log("[Firebase] Aplicativo inicializado com sucesso (DEFAULT).");
-  } else {
+} else {
     // Se já existe, pega a primeira instância (a padrão)
     app = getApps()[0]; 
     console.log("[Firebase] Aplicativo já estava inicializado (DEFAULT).");
-  }
-  // ----------------------------------------------------------------------
-  
-  try { getAnalytics(app); } catch(e) { /* ignore if analytics not allowed */ }
-  
-  // Try to enable persistent local cache, otherwise fallback
-  let db;
-  try {
+}
+// ----------------------------------------------------------------------
+
+try { getAnalytics(app); } catch(e) { /* ignore if analytics not allowed */ }
+
+// Try to enable persistent local cache, otherwise fallback
+let db;
+try {
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
     });
     console.log('[Firebase] Firestore initialized with persistentLocalCache.');
-  } catch(e) {
+} catch(e) {
     db = getFirestore(app);
     console.warn('[Firebase] persistentLocalCache not available; using getFirestore fallback.', e);
-  }
+}
 
-  const auth = getAuth(app);
+const auth = getAuth(app);
 
-  // Helpers
-  const log = (...a) => console.log('[Firebase]', ...a);
+// Helpers
+const log = (...a) => console.log('[Firebase]', ...a);
 
-  // Constants for single shop
-  const SHOP_ID = 'mainADM';
-  const SHOP_DOC_PATH = ['shops', SHOP_ID];
+// Constants for single shop
+const SHOP_ID = 'mainADM';
+const SHOP_DOC_PATH = ['shops', SHOP_ID];
 
-  // Ensure the shop doc exists (name "Lucão Store")
-  async function ensureShop() {
+// Ensure the shop doc exists (name "Lucão Store")
+async function ensureShop() {
     try {
-      const shopRef = doc(db, ...SHOP_DOC_PATH);
-      const snap = await getDoc(shopRef);
-      if (!snap.exists()) {
-        await setDoc(shopRef, { name: "Lucão Store", createdAt: serverTimestamp() });
-        log('Loja criada: Lucão Store');
-      } else {
-        log('Loja já existe no Firestore.');
-      }
+        const shopRef = doc(db, ...SHOP_DOC_PATH);
+        const snap = await getDoc(shopRef);
+        if (!snap.exists()) {
+            await setDoc(shopRef, { name: "Lucão Store", createdAt: serverTimestamp() });
+            log('Loja criada: Lucão Store');
+        } else {
+            log('Loja já existe no Firestore.');
+        }
     } catch(err) { console.error('[Firebase] ensureShop error', err); }
-  }
+}
 
-  // Migration: move common localStorage keys to Firestore if collections empty
-  async function migrateLocalToFirestore() {
+// Migration: move common localStorage keys to Firestore if collections empty
+async function migrateLocalToFirestore() {
     try {
-      // produtos
-      const prodCol = collection(db, 'shops', SHOP_ID, 'produtos');
-      const prodSnap = await getDocs(query(prodCol, orderBy('name')));
-      if (prodSnap.size === 0) {
-        const prodKeys = ['produtos','products','sc_products','sc_products_list'];
-        for (const k of prodKeys) {
-          const raw = localStorage.getItem(k);
-          if (!raw) continue;
-          try {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr) && arr.length) {
-              for (const item of arr) {
-                const docData = {
-                  name: item.name || item.nome || item.title || 'Produto',
-                  cost: Number(item.cost || item.custo || 0),
-                  price: Number(item.price || item.preco || 0),
-                  qty: Number(item.qty || item.qtd || item.quantity || 0),
-                  createdAt: serverTimestamp()
-                };
-                await addDoc(prodCol, docData);
-              }
-              log(`Migrated ${arr.length} produtos from localStorage key "${k}"`);
-              break;
+        // produtos
+        const prodCol = collection(db, 'shops', SHOP_ID, 'produtos');
+        const prodSnap = await getDocs(query(prodCol, orderBy('name')));
+        if (prodSnap.size === 0) {
+            const prodKeys = ['produtos','products','sc_products','sc_products_list'];
+            for (const k of prodKeys) {
+                const raw = localStorage.getItem(k);
+                if (!raw) continue;
+                try {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr) && arr.length) {
+                        for (const item of arr) {
+                            const docData = {
+                                name: item.name || item.nome || item.title || 'Produto',
+                                cost: Number(item.cost || item.custo || 0),
+                                price: Number(item.price || item.preco || 0),
+                                qty: Number(item.qty || item.qtd || item.quantity || 0),
+                                createdAt: serverTimestamp()
+                            };
+                            await addDoc(prodCol, docData);
+                        }
+                        log(`Migrated ${arr.length} produtos from localStorage key "${k}"`);
+                        break;
+                    }
+                } catch(e) { /* ignore parse errors */ }
             }
-          } catch(e) { /* ignore parse errors */ }
+        } else {
+            log('Produtos já existem — pulando migração de produtos.');
         }
-      } else {
-        log('Produtos já existem — pulando migração de produtos.');
-      }
 
-      // pedidos
-      const ordCol = collection(db, 'shops', SHOP_ID, 'pedidos');
-      const ordSnap = await getDocs(query(ordCol, orderBy('createdAt')));
-      if (ordSnap.size === 0) {
-        const ordKeys = ['pedidos','orders','sc_orders'];
-        for (const k of ordKeys) {
-          const raw = localStorage.getItem(k);
-          if (!raw) continue;
-          try {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr) && arr.length) {
-              for (const o of arr) {
-                await addDoc(ordCol, Object.assign({}, o, { createdAt: serverTimestamp() }));
-              }
-              log(`Migrated ${arr.length} pedidos from localStorage key "${k}"`);
-              break;
+        // pedidos
+        const ordCol = collection(db, 'shops', SHOP_ID, 'pedidos');
+        const ordSnap = await getDocs(query(ordCol, orderBy('createdAt')));
+        if (ordSnap.size === 0) {
+            const ordKeys = ['pedidos','orders','sc_orders'];
+            for (const k of ordKeys) {
+                const raw = localStorage.getItem(k);
+                if (!raw) continue;
+                try {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr) && arr.length) {
+                        for (const o of arr) {
+                            await addDoc(ordCol, Object.assign({}, o, { createdAt: serverTimestamp() }));
+                        }
+                        log(`Migrated ${arr.length} pedidos from localStorage key "${k}"`);
+                        break;
+                    }
+                } catch(e) {}
             }
-          } catch(e) {}
+        } else {
+            log('Pedidos já existem — pulando migração de pedidos.');
         }
-      } else {
-        log('Pedidos já existem — pulando migração de pedidos.');
-      }
 
-      // transacoes (entrada/saida/venda)
-      const transCol = collection(db, 'shops', SHOP_ID, 'transacoes');
-      const transSnap = await getDocs(query(transCol, orderBy('createdAt')));
-      if (transSnap.size === 0) {
-        const tKeys = ['transacoes','transactions','sc_trans'];
-        for (const k of tKeys) {
-          const raw = localStorage.getItem(k);
-          if (!raw) continue;
-          try {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr) && arr.length) {
-              for (const t of arr) {
-                await addDoc(transCol, Object.assign({}, t, { createdAt: serverTimestamp() }));
-              }
-              log(`Migrated ${arr.length} transacoes from localStorage key "${k}"`);
-              break;
+        // transacoes (entrada/saida/venda)
+        const transCol = collection(db, 'shops', SHOP_ID, 'transacoes');
+        const transSnap = await getDocs(query(transCol, orderBy('createdAt')));
+        if (transSnap.size === 0) {
+            const tKeys = ['transacoes','transactions','sc_trans'];
+            for (const k of tKeys) {
+                const raw = localStorage.getItem(k);
+                if (!raw) continue;
+                try {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr) && arr.length) {
+                        for (const t of arr) {
+                            await addDoc(transCol, Object.assign({}, t, { createdAt: serverTimestamp() }));
+                        }
+                        log(`Migrated ${arr.length} transacoes from localStorage key "${k}"`);
+                        break;
+                    }
+                } catch(e) {}
             }
-          } catch(e) {}
+        } else {
+            log('Transações já existem — pulando migração.');
         }
-      } else {
-        log('Transações já existem — pulando migração.');
-      }
 
-      log('Migração localStorage → Firestore finalizada.');
+        log('Migração localStorage → Firestore finalizada.');
+
     } catch(err) {
-      console.error('[Firebase] migrateLocalToFirestore error', err);
+        console.error('[Firebase] migrateLocalToFirestore error', err);
     }
-  }
+} // <--- 🚨 A CHAVE DE FECHAMENTO ESTAVA FALTANDO AQUI!
+// --------------------------------------------------------------------------------
 
-  // Boot sequence
-  (async ()=> {
+// Funções Auxiliares: Agora definidas no escopo global correto.
+
+function loginAdminAfterAuth(email, role) {
+    // ⚠️ Certifique-se de que a variável 'state' global está definida no seu código 
+    state.email = email;
+    state.role = role;
+
+    el('userEmail').textContent = state.email;
+    el('userRole').textContent = role === 'admin' ? ' • ADM' : '';
+    el('userRole').className = role === 'admin' ? 'role-admin' : 'role-view';
+    el('userSubtitle').textContent = 'Painel de Administração';
+
+    document.getElementById('loginCard').style.display='none'; // ESCONDE O LOGIN
+    document.getElementById('screen-root').style.display='none';
+    const app = el('app'); app.style.display = 'block'; // MOSTRA O APP
+    el('adminPanel').style.display = 'block';
+    el('clientPanel').style.display = 'none';
+
+    loadAdminProducts(); // Carrega dados
+    loadOrders(); // Carrega pedidos
+
+    setTimeout(()=> app.style.opacity = '1',40);
+    applyRoleRestrictions();
+    renderAll(); 
+}
+
+function loginClientAfterAuth(email, role) {
+    state.email = email;
+    state.role = role;
+
+    el('userEmail').textContent = state.email;
+    el('userRole').textContent = ' • Cliente';
+    el('userRole').className = 'role-client';
+    el('userSubtitle').textContent = 'Área do Cliente';
+
+    document.getElementById('loginCard').style.display='none'; // ESCONDE O LOGIN
+    document.getElementById('screen-root').style.display='none';
+    const app = el('app'); app.style.display = 'block'; // MOSTRA O APP
+    el('adminPanel').style.display = 'none';
+    el('clientPanel').style.display = 'block';
+
+    loadAdminProducts(); // Carrega produtos para o cliente ver
+    loadOrders(); // Carrega pedidos do cliente
+
+    setTimeout(()=> app.style.opacity = '1',40);
+    renderClientViews(); 
+}
+
+// --------------------------------------------------------------------------------
+// BLOCO DE BOOT: Responsável por iniciar e exibir a tela correta.
+// --------------------------------------------------------------------------------
+(async ()=> {
+    // 1. Garante que a loja e migração estejam prontas
     await ensureShop();
-    await migrateLocalToFirestore();
-    log('Firebase integration ready. Shop:', SHOP_ID);
-  })();
+    await migrateLocalToFirestore(); 
+    
+    log('Firebase integration ready. Monitoring auth state...');
 
-  // Expose helpers for debugging on window
-  window.__LS_FIREBASE = { db, auth, ensureShop, migrateLocalToFirestore, SHOP_ID };
+    // 2. MONITORAMENTO OBRIGATÓRIO: Decide o que mostrar com base no estado de login
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // USUÁRIO ESTÁ LOGADO - Tenta carregar o painel
+            
+            // Busca a role do usuário (necessário após um refresh)
+            const userRoleSnap = await getDoc(doc(db, "users", user.uid));
+            let role = 'client'; 
+            if (userRoleSnap.exists() && userRoleSnap.data().role === 'admin') {
+                 role = 'admin';
+            }
+            
+            // Chama a função auxiliar para exibir a UI correta
+            if (role === 'admin') {
+                loginAdminAfterAuth(user.email, role);
+            } else {
+                loginClientAfterAuth(user.email, role);
+            }
+
+        } else {
+            // NENHUM USUÁRIO LOGADO - MOSTRA A TELA DE LOGIN
+            log('[AUTH] Nenhum usuário logado. Exibindo tela de login.');
+            
+            // FORÇA A EXIBIÇÃO DA CAIXA DE LOGIN
+            document.getElementById('loginCard').style.display = 'flex'; 
+            document.getElementById('screen-root').style.display = 'flex';
+            el('app').style.display = 'none'; 
+        }
+    });
+})();
+
+// Expose helpers for debugging on window
+window.__LS_FIREBASE = { db, auth, ensureShop, migrateLocalToFirestore, SHOP_ID };
+
 </script>
-
 
 
 
