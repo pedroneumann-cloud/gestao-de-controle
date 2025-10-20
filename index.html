@@ -133,6 +133,39 @@ select::-ms-expand { display: none; }
   .products-list{max-height:300px}
 }
 </style>
+
+
+
+
+
+
+
+
+<!-- Adicione isso no seu HTML -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "sua-api-key",
+    authDomain: "seu-projeto.firebaseapp.com",
+    projectId: "seu-project-id",
+    storageBucket: "seu-projeto.firebasestorage.app",
+    messagingSenderId: "seu-sender-id",
+    appId: "seu-app-id"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+</script>
+
+
+
+
+
+
+
+
 </head>
 <body>
 
