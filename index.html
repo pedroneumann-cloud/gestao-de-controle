@@ -1,27 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sistema de Compra</title>
 <style>
 :root{
-  --bg:#050505;
-  --panel:#0b0d10;
-  --muted:#9aa1a6;
-  --accent:#00b894;
-  --glass: rgba(255,255,255,0.03);
-  --glass-strong: rgba(255,255,255,0.06);
-  --card:#070809;
-  --text:#e6eef1;
-  --input-bg:#0a0b0c;
-  --select-bg:#0c0d0e;
-  --danger:#ff7675;
-  --warning:#fdcb6e;
-  --info:#74b9ff;
-  --success:#00b894;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --bg:#050505;
+  --panel:#0b0d10;
+  --muted:#9aa1a6;
+  --accent:#00b894;
+  --glass: rgba(255,255,255,0.03);
+  --glass-strong: rgba(255,255,255,0.06);
+  --card:#070809;
+  --text:#e6eef1;
+  --input-bg:#0a0b0c;
+  --select-bg:#0c0d0e;
+  --danger:#ff7675;
+  --warning:#fdcb6e;
+  --info:#74b9ff;
+  --success:#00b894;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #0a0a0b 100%);color:var(--text);-webkit-font-smoothing:antialiased}
@@ -56,83 +54,10 @@ a{color:inherit}
 .limit-badge{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.02);font-size:13px}
 .empty{opacity:0.7;color:var(--muted);padding:14px;text-align:center}
 
-/* ======================================= */
-/* CORREÇÕES DE LAYOUT DE LOGIN APLICADAS */
-/* ======================================= */
-
-/* NOVO: Fundo da tela de login (resolve tela preta e centralização) */
-#screen-root {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg);
-    z-index: 9999;
-}
-
-/* MODIFICADO: Layout e Animação do Card de Login */
-/* Assumindo que #loginCard usa a classe .login-wrap */
-.login-wrap {
-    /* Estilos existentes */
-    width: 100%;
-    max-width: 440px;
-    padding: 22px;
-    border-radius: 14px;
-    background: linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005));
-    border: 1px solid rgba(255,255,255,0.04);
-    backdrop-filter: blur(8px);
-    
-    /* NOVO: Layout interno para organizar abas e formulários (resolve bagunça) */
-    display: flex; 
-    flex-direction: column;
-    gap: 20px; 
-
-    /* NOVO: Animação inicial (começa invisível e deslocado) */
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: all 0.5s ease-out; /* Transição suave */
-}
-
+/* LOGIN */
+.login-wrap{width:100%;max-width:440px;padding:22px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px)}
 .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
 .subtle{color:var(--muted);font-size:13px;margin-bottom:10px}
-
-/* NOVO: Organização dos Grupos de Formulário (Inputs/Botões) */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Espaço entre inputs */
-}
-
-/* MODIFICADO: Abas de Login/Registro */
-.tabs-container { /* Nova classe para o contêiner das abas */
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-/* MODIFICADO: Estilo da aba (Substituindo a antiga regra .tabs) */
-.tab{
-    flex:1;
-    text-align:center;
-    padding:10px 12px; /* Aumentei o padding para melhor toque */
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:700;
-    transition:background .3s, color .3s;
-    background:var(--input-bg); /* Estilo de fundo para abas inativas */
-    color:var(--muted);
-}
-.tab.active{
-    background:var(--accent); /* Cor de destaque na aba ativa */
-    color:#021; /* Texto escuro no botão de destaque */
-}
-/* ======================================= */
-/* FIM DAS CORREÇÕES DE LAYOUT DE LOGIN */
-/* ======================================= */
 
 /* MODAL / DETAILS (ensure black bg) */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:60}
@@ -163,27 +88,29 @@ a{color:inherit}
 
 /* responsive */
 @media(max-width:900px){
-  .grid{grid-template-columns:1fr}
-  .logo{width:46px;height:46px}
-  .product{padding:10px}
-  .center-screen{padding:18px}
-  .container{padding:12px}
-  .header{flex-direction:column;align-items:stretch;gap:8px}
-  .topbar{flex-direction:column;align-items:stretch;gap:8px}
-  .user-pill{justify-content:center;margin-top:8px}
-  .form-row{flex-direction:column;align-items:stretch}
-  .form-row > *{width:100% !important}
-  .statlist{flex-direction:column}
-  .product{flex-direction:column;align-items:stretch;gap:8px}
-  .product-actions{justify-content:center}
-  .modal{width:95%;margin:10px;padding:14px}
+  .grid{grid-template-columns:1fr}
+  .logo{width:46px;height:46px}
+  .product{padding:10px}
+  .center-screen{padding:18px}
+  .container{padding:12px}
+  .header{flex-direction:column;align-items:stretch;gap:8px}
+  .topbar{flex-direction:column;align-items:stretch;gap:8px}
+  .user-pill{justify-content:center;margin-top:8px}
+  .form-row{flex-direction:column;align-items:stretch}
+  .form-row > *{width:100% !important}
+  .statlist{flex-direction:column}
+  .product{flex-direction:column;align-items:stretch;gap:8px}
+  .product-actions{justify-content:center}
+  .modal{width:95%;margin:10px;padding:14px}
 }
 
 /* fix selects in chrome mobile */
 select::-ms-expand { display: none; }
 
 /* tabs */
-/* REMOVIDO: A regra .tabs foi substituída por .tabs-container e .tab para melhor layout */
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.01);padding:4px;border-radius:10px;margin-bottom:12px}
+.tab{flex:1;text-align:center;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;transition:background .12s}
+.tab.active{background:rgba(255,255,255,0.05)}
 
 /* purchase history */
 .history-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px}
@@ -199,18 +126,42 @@ select::-ms-expand { display: none; }
 
 /* mobile optimizations */
 @media(max-width:480px){
-  .login-wrap{padding:16px;margin:10px}
-  .btn{padding:12px 16px;font-size:14px}
-  .input,select,textarea{padding:12px;font-size:16px}
-  .products-list{max-height:300px}
+  .login-wrap{padding:16px;margin:10px}
+  .btn{padding:12px 16px;font-size:14px}
+  .input,select,textarea{padding:12px;font-size:16px}
+  .products-list{max-height:300px}
 }
+
+/* ===== FIX FINAL: Centralização + Velocidade ===== */
+#screen-root{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+}
+#loginCard{
+  display:block !important;
+  width:100%;
+  max-width:440px;
+  margin:auto;
+  opacity:0;
+  transform:translateY(-10px);
+  transition:0.25s ease-out;
+}
+#loginCard > *{
+  width:100%;
+}
+
 </style>
-</head>
+<script src="./Sistema de Compra_files/js" async=""></script></head>
 <body>
 
-<div class="center-screen" id="screen-root">
+<div class="center-screen" id="screen-root" style="display: flex;">
   <!-- LOGIN -->
-  <div class="login-wrap card" id="loginCard" style="transform:translateY(8px);opacity:0;transition:all .45s cubic-bezier(.2,.9,.25,1)">
+  <div class="login-wrap card" id="loginCard" style="transform: translateY(0px); opacity: 1; transition: 0.45s cubic-bezier(0.2, 0.9, 0.25, 1); display: flex;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div class="brand"><div class="logo">SC</div><div><div class="login-title">Sistema de Compra</div><div class="subtle">Escolha seu tipo de acesso</div></div></div>
       <div class="small-muted">Profissional • Dark</div>
@@ -225,11 +176,11 @@ select::-ms-expand { display: none; }
     <div id="clientLogin" style="display:block">
       <div style="margin-top:8px">
         <label class="small">E-mail</label>
-        <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email"/>
+        <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
       </div>
       <div style="margin-top:8px">
         <label class="small">Senha</label>
-        <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
+        <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
       </div>
       <div style="margin-top:10px;display:flex;gap:8px">
         <button id="clientLoginBtn" class="btn primary">Entrar como Cliente</button>
@@ -243,7 +194,7 @@ select::-ms-expand { display: none; }
       <div id="adminAccessForm">
         <div style="margin-top:8px">
           <label class="small">Senha de Acesso ADM</label>
-          <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM"/>
+          <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM">
         </div>
         <div style="margin-top:10px">
           <button id="adminAccessBtn" class="btn primary">Acessar Painel ADM</button>
@@ -253,11 +204,11 @@ select::-ms-expand { display: none; }
       <div id="adminLoginForm" class="admin-access">
         <div style="margin-top:8px">
           <label class="small">E-mail</label>
-          <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email"/>
+          <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
         </div>
         <div style="margin-top:8px">
           <label class="small">Senha</label>
-          <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
+          <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
         </div>
         <div style="margin-top:10px;display:flex;gap:8px">
           <button id="loginBtn" class="btn primary">Entrar</button>
@@ -294,27 +245,27 @@ select::-ms-expand { display: none; }
         </div>
 
         <div class="label">Nome do produto</div>
-        <input id="pName" class="input" placeholder="Ex: Produto X" />
+        <input id="pName" class="input" placeholder="Ex: Produto X">
 
         <div class="form-row">
           <div style="flex:1">
             <div class="label">Preço de custo (R$)</div>
-            <input id="pCost" class="input" type="number" min="0" step="0.01" />
+            <input id="pCost" class="input" type="number" min="0" step="0.01">
           </div>
           <div style="width:140px">
             <div class="label">Preço de venda (R$)</div>
-            <input id="pPrice" class="input" type="number" min="0" step="0.01" />
+            <input id="pPrice" class="input" type="number" min="0" step="0.01">
           </div>
         </div>
 
         <div class="form-row" style="margin-top:8px">
           <div style="flex:1">
             <div class="label">Quantidade</div>
-            <input id="pQty" class="input" type="number" min="0" step="1" />
+            <input id="pQty" class="input" type="number" min="0" step="1">
           </div>
           <div style="width:140px">
             <div class="label">Categoria</div>
-            <input id="pCat" class="input" />
+            <input id="pCat" class="input">
           </div>
         </div>
 
@@ -328,7 +279,7 @@ select::-ms-expand { display: none; }
         <div class="label">Operação rápida (entrada / saída)</div>
         <div class="form-row">
           <select id="opProduct" class="input select-dark"><option value="">Escolha um produto</option></select>
-          <input id="opQty" class="input" type="number" placeholder="Qtd" />
+          <input id="opQty" class="input" type="number" placeholder="Qtd">
           <select id="opType" class="input select-dark"><option value="in">Entrada</option><option value="out">Saída</option></select>
           <button id="applyOp" class="btn">Aplicar</button>
         </div>
@@ -810,5 +761,5 @@ window.__LS_FIREBASE = { db, auth, ensureShop, SHOP_ID };
 
 
 
-</body>
-</html>
+
+</body></html>
