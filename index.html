@@ -394,6 +394,34 @@ let state = {
   currentView: 'shop'
 };
 
+
+
+// STUBS/PLACEHOLDERS (Funções que precisam existir para a UI não quebrar)
+function loadAdminProducts() { 
+  console.warn('STUB: loadAdminProducts chamado. A implementação real de carregamento do Firestore já está no final do arquivo e precisa ser corrigida ou movida.'); 
+}
+function loadOrders() { 
+  console.warn('STUB: loadOrders chamado. A implementação real de carregamento de pedidos do Firestore já está no final do arquivo e precisa ser corrigida ou movida.'); 
+}
+function applyRoleRestrictions() { 
+  // Funções ADM/Viewer/Client precisam disso para restringir a UI
+  console.warn('STUB: applyRoleRestrictions chamado. Implementação de restrições de UI pendente.'); 
+}
+function renderAll() { 
+  // Função para renderizar o painel ADM
+  console.warn('STUB: renderAll chamado. Implementação de renderização do painel ADM pendente.'); 
+}
+function renderClientViews() { 
+  // Função para alternar entre Loja/Pedidos/Histórico do Cliente
+  console.warn('STUB: renderClientViews chamado. Implementação de troca de views do cliente pendente.'); 
+}
+
+
+
+
+
+
+
 // utils
 function money(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
