@@ -134,22 +134,37 @@ select::-ms-expand { display: none; }
   .products-list{max-height:300px}
 }
 
-/* ===== FIX FINAL: Z-index e hierarquia de exibição ===== */
-#screen-root { 
-  z-index: 5; 
+/* ===== FIX FINAL: Centralização perfeita e sem sobreposição ===== */
+#screen-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 1 !important; /* atrás dos painéis */
 }
-#app { 
-  z-index: 10; 
-  position: relative; 
+
+#loginCard {
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  max-width: 440px;
+  width: 100%;
+  margin: auto;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: 0.25s ease-out;
+  z-index: 1 !important;
 }
-#loginCard{
-  display:block !important;
-  width:100%;
-  max-width:440px;
-  margin:auto;
-  opacity:0;
-  transform:translateY(-10px);
-  transition:0.25s ease-out;
+
+#app {
+  z-index: 10 !important; /* Painel principal sempre à frente */
+  position: relative;
 }
 
 </style>
@@ -544,15 +559,6 @@ function loginAdminAfterAuth(email, role) {
     el('userRole').className = role === 'admin' ? 'role-admin' : 'role-view';
     el('userSubtitle').textContent = 'Painel de Administração';
 
-    // Esconde login e mostra app corretamente
-    el('loginCard').style.display = 'none';
-    el('screen-root').style.display = 'none';
-    el('app').style.display = 'block';
-    el('app').style.opacity = '1';
-    el('adminPanel').style.display = 'block';
-    el('clientPanel').style.display = 'none';
-
-
     document.getElementById('loginCard').style.display='none'; 
     document.getElementById('screen-root').style.display='none';
     const app = el('app'); app.style.display = 'block'; 
@@ -575,15 +581,6 @@ function loginClientAfterAuth(email, role) {
     el('userRole').textContent = ' • Cliente';
     el('userRole').className = 'role-client';
     el('userSubtitle').textContent = 'Área do Cliente';
-
-    // Esconde login e mostra app corretamente
-    el('loginCard').style.display = 'none';
-    el('screen-root').style.display = 'none';
-    el('app').style.display = 'block';
-    el('app').style.opacity = '1';
-    el('adminPanel').style.display = 'none';
-    el('clientPanel').style.display = 'block';
-
 
     document.getElementById('loginCard').style.display='none'; 
     document.getElementById('screen-root').style.display='none';
@@ -742,11 +739,6 @@ el('adminAccessBtn').onclick = () => {
 
     // MONITORAMENTO OBRIGATÓRIO: Esta função decide o que mostrar
     onAuthStateChanged(auth, async (user) => {
-    // Garante que nenhum painel fique sobreposto durante a inicialização
-    el('loginCard').style.display = 'none';
-    el('screen-root').style.display = 'none';
-    el('adminPanel').style.display = 'none';
-    el('clientPanel').style.display = 'none';
         if (user) {
             // USUÁRIO ESTÁ LOGADO
             const userRoleSnap = await getDoc(doc(db, "users", user.uid));
