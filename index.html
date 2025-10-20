@@ -132,7 +132,7 @@ select::-ms-expand { display: none; }
   .products-list{max-height:300px}
 }
 
-/* ===== FIX FINAL: Centralização + Velocidade ===== */
+/* ===== FIX: Centralização estável e card compacto ===== */
 #screen-root{
   position:fixed;
   inset:0;
@@ -151,9 +151,7 @@ select::-ms-expand { display: none; }
   transform:translateY(-10px);
   transition:0.25s ease-out;
 }
-#loginCard > *{
-  width:100%;
-}
+#loginCard > *{ width:100%; box-sizing:border-box; }
 
 </style>
 <script src="./Sistema de Compra_files/js" async=""></script></head>
@@ -658,17 +656,26 @@ el('registerBtn').onclick = ()=> {
     registerAdmin(email, password); 
 }
 
-el('clientLoginBtn').onclick = ()=> { 
-    const email = el('clientEmail').value.trim(); 
-    const password = el('clientPassword').value;
-    if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
-    
-    signInWithEmailAndPassword(auth, email, password)
-        .catch(error => {
-            console.error("Erro no login Cliente:", error);
-            alert('Erro no Login: ' + error.message);
-        });
-}
+el('clientLoginBtn').onclick = () => { 
+  const email = el('clientEmail').value.trim(); 
+  const password = el('clientPassword').value;
+  if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      // Mostrar imediatamente painel do cliente, sem animações extras
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('screen-root').style.display = 'none';
+      const app = document.getElementById('app');
+      app.style.display = 'block';
+      app.style.opacity = '1';
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('clientPanel').style.display = 'block';
+    })
+    .catch(error => {
+      console.error("Erro no login Cliente:", error);
+      alert('Erro no Login: ' + error.message);
+    });
+};
 
 el('clientRegisterBtn').onclick = ()=> { 
     const email = el('clientEmail').value.trim(); 
@@ -727,6 +734,9 @@ el('adminAccessBtn').onclick = () => {
 
     // MONITORAMENTO OBRIGATÓRIO: Esta função decide o que mostrar
     onAuthStateChanged(auth, async (user) => {
+        // Garante que nada apareça sobreposto durante a troca
+        el('adminPanel').style.display = 'none';
+        el('clientPanel').style.display = 'none';
         if (user) {
             // USUÁRIO ESTÁ LOGADO
             const userRoleSnap = await getDoc(doc(db, "users", user.uid));
