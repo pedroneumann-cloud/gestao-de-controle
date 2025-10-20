@@ -168,6 +168,29 @@ select::-ms-expand { display: none; }
 
 </head>
 <body>
+<!-- Firebase App (o core do Firebase) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  // Cole AQUI as configurações que você copiou
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmHuger...",
+    authDomain: "banco-de-dados-lucao.firebaseapp.com",
+    projectId: "banco-de-dados-lucao",
+    storageBucket: "banco-de-dados-lucao.firebasestorage.app",
+    messagingSenderId: "952766728999",
+    appId: "1:953706728999:web:beffe7e2c3ff04cb0e00016",
+    measurementId: "G-5FGBPPWWWW"
+  };
+
+  // Inicialize o Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  
+  // Agora você pode usar o 'db' para acessar seu banco de dados!
+  console.log("Firebase conectado com sucesso!");
+</script>
 
 <div class="center-screen" id="screen-root">
   <!-- LOGIN -->
