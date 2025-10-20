@@ -1607,5 +1607,160 @@ renderAll = function() {
   }
 };
 </script>
+<!-- Firebase integration (added by assistant) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+  import { initializeFirestore, getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+  // Firebase config (for your project)
+  const firebaseConfig = {
+    apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
+    authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
+    projectId: "banco-de-dados-4dd4d",
+    storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
+    messagingSenderId: "1002214156963",
+    appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
+    measurementId: "G-5NL2Z4D91B"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e) { /* ignore if analytics not allowed */ }
+
+  // Try to enable persistent local cache, otherwise fallback
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+    console.log('[Firebase] Firestore initialized with persistentLocalCache.');
+  } catch(e) {
+    db = getFirestore(app);
+    console.warn('[Firebase] persistentLocalCache not available; using getFirestore fallback.', e);
+  }
+
+  const auth = getAuth(app);
+
+  // Helpers
+  const log = (...a) => console.log('[Firebase]', ...a);
+
+  // Constants for single shop
+  const SHOP_ID = 'mainADM';
+  const SHOP_DOC_PATH = ['shops', SHOP_ID];
+
+  // Ensure the shop doc exists (name "Lucão Store")
+  async function ensureShop() {
+    try {
+      const shopRef = doc(db, ...SHOP_DOC_PATH);
+      const snap = await getDoc(shopRef);
+      if (!snap.exists()) {
+        await setDoc(shopRef, { name: "Lucão Store", createdAt: serverTimestamp() });
+        log('Loja criada: Lucão Store');
+      } else {
+        log('Loja já existe no Firestore.');
+      }
+    } catch(err) { console.error('[Firebase] ensureShop error', err); }
+  }
+
+  // Migration: move common localStorage keys to Firestore if collections empty
+  async function migrateLocalToFirestore() {
+    try {
+      // produtos
+      const prodCol = collection(db, 'shops', SHOP_ID, 'produtos');
+      const prodSnap = await getDocs(query(prodCol, orderBy('name')));
+      if (prodSnap.size === 0) {
+        const prodKeys = ['produtos','products','sc_products','sc_products_list'];
+        for (const k of prodKeys) {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length) {
+              for (const item of arr) {
+                const docData = {
+                  name: item.name || item.nome || item.title || 'Produto',
+                  cost: Number(item.cost || item.custo || 0),
+                  price: Number(item.price || item.preco || 0),
+                  qty: Number(item.qty || item.qtd || item.quantity || 0),
+                  createdAt: serverTimestamp()
+                };
+                await addDoc(prodCol, docData);
+              }
+              log(`Migrated ${arr.length} produtos from localStorage key "${k}"`);
+              break;
+            }
+          } catch(e) { /* ignore parse errors */ }
+        }
+      } else {
+        log('Produtos já existem — pulando migração de produtos.');
+      }
+
+      // pedidos
+      const ordCol = collection(db, 'shops', SHOP_ID, 'pedidos');
+      const ordSnap = await getDocs(query(ordCol, orderBy('createdAt')));
+      if (ordSnap.size === 0) {
+        const ordKeys = ['pedidos','orders','sc_orders'];
+        for (const k of ordKeys) {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length) {
+              for (const o of arr) {
+                await addDoc(ordCol, Object.assign({}, o, { createdAt: serverTimestamp() }));
+              }
+              log(`Migrated ${arr.length} pedidos from localStorage key "${k}"`);
+              break;
+            }
+          } catch(e) {}
+        }
+      } else {
+        log('Pedidos já existem — pulando migração de pedidos.');
+      }
+
+      // transacoes (entrada/saida/venda)
+      const transCol = collection(db, 'shops', SHOP_ID, 'transacoes');
+      const transSnap = await getDocs(query(transCol, orderBy('createdAt')));
+      if (transSnap.size === 0) {
+        const tKeys = ['transacoes','transactions','sc_trans'];
+        for (const k of tKeys) {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length) {
+              for (const t of arr) {
+                await addDoc(transCol, Object.assign({}, t, { createdAt: serverTimestamp() }));
+              }
+              log(`Migrated ${arr.length} transacoes from localStorage key "${k}"`);
+              break;
+            }
+          } catch(e) {}
+        }
+      } else {
+        log('Transações já existem — pulando migração.');
+      }
+
+      log('Migração localStorage → Firestore finalizada.');
+    } catch(err) {
+      console.error('[Firebase] migrateLocalToFirestore error', err);
+    }
+  }
+
+  // Boot sequence
+  (async ()=> {
+    await ensureShop();
+    await migrateLocalToFirestore();
+    log('Firebase integration ready. Shop:', SHOP_ID);
+  })();
+
+  // Expose helpers for debugging on window
+  window.__LS_FIREBASE = { db, auth, ensureShop, migrateLocalToFirestore, SHOP_ID };
+
+</script>
+<!-- End Firebase integration -->
+
 </body>
 </html>
