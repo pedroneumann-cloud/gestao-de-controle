@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
-<!-- saved from url=(0130)file:///C:/Users/Windows%20%2011/AppData/Local/Temp/746cb81b-3bac-4883-9219-3afcdc8129af_sistema_gestao_compras.zip.9af/index.html -->
-<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistema de Compra</title>
-<style>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sistema de Compra</title>
+  <style>
 :root{
   --bg:#050505;
   --panel:#0b0d10;
@@ -61,7 +60,7 @@ a{color:inherit}
 .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
 .subtle{color:var(--muted);font-size:13px;margin-bottom:10px}
 
-/* MODAL / DETAILS (ensure black bg) */
+/* MODAL / DETAILS */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:60}
 .modal{width:calc(100% - 40px);max-width:720px;background:#000;border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 22px 60px rgba(0,0,0,0.8);color:var(--text)}
 .tx-table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -134,19 +133,15 @@ select::-ms-expand { display: none; }
   .products-list{max-height:300px}
 }
 
-/* ===== FIX FINAL: Centralização perfeita e sem sobreposição ===== */
+/* ===== Centralização + Não sobrepor painéis ===== */
 #screen-root {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex !important;
   align-items: center;
   justify-content: center;
-  z-index: 1 !important; /* atrás dos painéis */
+  z-index: 1 !important; /* atrás do app */
 }
-
 #loginCard {
   position: relative;
   display: flex !important;
@@ -161,617 +156,466 @@ select::-ms-expand { display: none; }
   transition: 0.25s ease-out;
   z-index: 1 !important;
 }
-
 #app {
-  z-index: 10 !important; /* Painel principal sempre à frente */
+  z-index: 10 !important; /* App sempre à frente do login */
   position: relative;
 }
-
-</style>
-<script src="./Sistema de Compra_files/js" async=""></script></head>
+/* Quando escondemos o login, garantimos que ele não capture eventos */
+.hidden-login {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+  </style>
+</head>
 <body>
-
-<div class="center-screen" id="screen-root" style="display: flex;">
-  <!-- LOGIN -->
-  <div class="login-wrap card" id="loginCard" style="transform: translateY(0px); opacity: 1; transition: 0.45s cubic-bezier(0.2, 0.9, 0.25, 1); display: flex;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="brand"><div class="logo">SC</div><div><div class="login-title">Sistema de Compra</div><div class="subtle">Escolha seu tipo de acesso</div></div></div>
-      <div class="small-muted">Profissional • Dark</div>
-    </div>
-
-    <div class="tabs" id="loginTabs">
-      <div class="tab active" data-tab="client">Cliente</div>
-      <div class="tab" data-tab="admin">Administrador</div>
-    </div>
-
-    <!-- Client Login -->
-    <div id="clientLogin" style="display:block">
-      <div style="margin-top:8px">
-        <label class="small">E-mail</label>
-        <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Senha</label>
-        <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button id="clientLoginBtn" class="btn primary">Entrar como Cliente</button>
-        <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
-      </div>
-      <div class="small" style="margin-top:10px;color:var(--muted)">É necessário fazer login para realizar compras.</div>
-    </div>
-
-    <!-- Admin Login -->
-    <div id="adminLogin" style="display:none">
-      <div id="adminAccessForm">
-        <div style="margin-top:8px">
-          <label class="small">Senha de Acesso ADM</label>
-          <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM">
+  <div class="center-screen" id="screen-root">
+    <!-- LOGIN -->
+    <div class="login-wrap card" id="loginCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="brand">
+          <div class="logo">SC</div>
+          <div>
+            <div class="login-title">Sistema de Compra</div>
+            <div class="subtle">Escolha seu tipo de acesso</div>
+          </div>
         </div>
-        <div style="margin-top:10px">
-          <button id="adminAccessBtn" class="btn primary">Acessar Painel ADM</button>
-        </div>
+        <div class="small-muted">Profissional • Dark</div>
       </div>
 
-      <div id="adminLoginForm" class="admin-access">
+      <div class="tabs" id="loginTabs">
+        <div class="tab active" data-tab="client">Cliente</div>
+        <div class="tab" data-tab="admin">Administrador</div>
+      </div>
+
+      <!-- Client Login -->
+      <div id="clientLogin" style="display:block">
         <div style="margin-top:8px">
           <label class="small">E-mail</label>
-          <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
+          <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
         </div>
         <div style="margin-top:8px">
           <label class="small">Senha</label>
-          <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
+          <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
         </div>
         <div style="margin-top:10px;display:flex;gap:8px">
-          <button id="loginBtn" class="btn primary">Entrar</button>
-          <button id="registerBtn" class="btn">Registrar ADM</button>
+          <button id="clientLoginBtn" class="btn primary">Entrar como Cliente</button>
+          <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
+        </div>
+        <div class="small" style="margin-top:10px;color:var(--muted)">É necessário fazer login para realizar compras.</div>
+      </div>
+
+      <!-- Admin Login -->
+      <div id="adminLogin" style="display:none">
+        <div id="adminAccessForm">
+          <div style="margin-top:8px">
+            <label class="small">Senha de Acesso ADM</label>
+            <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM">
+          </div>
+          <div style="margin-top:10px">
+            <button id="adminAccessBtn" class="btn primary">Acessar Painel ADM</button>
+          </div>
+        </div>
+
+        <div id="adminLoginForm" class="admin-access">
+          <div style="margin-top:8px">
+            <label class="small">E-mail</label>
+            <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
+          </div>
+          <div style="margin-top:8px">
+            <label class="small">Senha</label>
+            <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button id="loginBtn" class="btn primary">Entrar</button>
+            <button id="registerBtn" class="btn">Registrar ADM</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- APP (hidden until login) -->
-<div class="container" id="app" style="display:none;opacity:0;transition:opacity .35s">
-  <div class="header card topbar">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Compra</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="user-pill" id="userInfo"><div class="small-muted">Logado como:</div><div id="userEmail" style="font-weight:800"></div><div id="userRole" class="role-view"></div></div>
-      <div style="display:flex;gap:8px">
-        <button id="logoutBtn" class="btn">Sair</button>
+  <!-- APP -->
+  <div class="container" id="app" style="display:none;opacity:0;transition:opacity .35s">
+    <div class="header card topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Compra</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="user-pill" id="userInfo"><div class="small-muted">Logado como:</div><div id="userEmail" style="font-weight:800"></div><div id="userRole" class="role-view"></div></div>
+        <div style="display:flex;gap:8px">
+          <button id="logoutBtn" class="btn">Sair</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="notice" style="display:none;margin-bottom:10px" class="card small-muted"></div>
+    <div id="notice" style="display:none;margin-bottom:10px" class="card small-muted"></div>
 
-  <!-- Admin Panel -->
-  <div id="adminPanel" style="display:none">
-    <div class="grid">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><strong>Cadastro / Estoque</strong><div class="small-muted">Máx 10 itens por conta</div></div>
-          <div class="limit-badge" id="countBadge">0 / 10</div>
-        </div>
-
-        <div class="label">Nome do produto</div>
-        <input id="pName" class="input" placeholder="Ex: Produto X">
-
-        <div class="form-row">
-          <div style="flex:1">
-            <div class="label">Preço de custo (R$)</div>
-            <input id="pCost" class="input" type="number" min="0" step="0.01">
+    <!-- Painel ADM -->
+    <div id="adminPanel" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div><strong>Cadastro / Estoque</strong><div class="small-muted">Máx 10 itens por conta</div></div>
+            <div class="limit-badge" id="countBadge">0 / 10</div>
           </div>
-          <div style="width:140px">
-            <div class="label">Preço de venda (R$)</div>
-            <input id="pPrice" class="input" type="number" min="0" step="0.01">
+
+          <div class="label">Nome do produto</div>
+          <input id="pName" class="input" placeholder="Ex: Produto X">
+
+          <div class="form-row">
+            <div style="flex:1">
+              <div class="label">Preço de custo (R$)</div>
+              <input id="pCost" class="input" type="number" min="0" step="0.01">
+            </div>
+            <div style="width:140px">
+              <div class="label">Preço de venda (R$)</div>
+              <input id="pPrice" class="input" type="number" min="0" step="0.01">
+            </div>
           </div>
-        </div>
 
-        <div class="form-row" style="margin-top:8px">
-          <div style="flex:1">
-            <div class="label">Quantidade</div>
-            <input id="pQty" class="input" type="number" min="0" step="1">
+          <div class="form-row" style="margin-top:8px">
+            <div style="flex:1">
+              <div class="label">Quantidade</div>
+              <input id="pQty" class="input" type="number" min="0" step="1">
+            </div>
+            <div style="width:140px">
+              <div class="label">Categoria</div>
+              <input id="pCat" class="input">
+            </div>
           </div>
-          <div style="width:140px">
-            <div class="label">Categoria</div>
-            <input id="pCat" class="input">
+
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="addProduct" class="btn primary">Adicionar / Atualizar</button>
+            <button id="resetForm" class="btn">Limpar</button>
           </div>
+
+          <div class="sep"></div>
+
+          <div class="label">Operação rápida (entrada / saída)</div>
+          <div class="form-row">
+            <select id="opProduct" class="input select-dark"><option value="">Escolha um produto</option></select>
+            <input id="opQty" class="input" type="number" placeholder="Qtd">
+            <select id="opType" class="input select-dark"><option value="in">Entrada</option><option value="out">Saída</option></select>
+            <button id="applyOp" class="btn">Aplicar</button>
+          </div>
+
+          <div class="small-muted" style="margin-top:10px">As ações de modificar/excluir são restritas a administradores. Visualizadores apenas leem dados.</div>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button id="addProduct" class="btn primary">Adicionar / Atualizar</button>
-          <button id="resetForm" class="btn">Limpar</button>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <strong>Painel</strong>
+            <div class="small-muted">Visualização por conta</div>
+          </div>
+
+          <div class="statlist">
+            <div class="stat"><div class="small-muted">Total em estoque</div><div class="num" id="totalStock">R$ 0,00</div></div>
+            <div class="stat"><div class="small-muted">Total vendido</div><div class="num" id="totalSold">R$ 0,00</div></div>
+            <div class="stat"><div class="small-muted">Lucro total</div><div class="num" id="totalProfit">R$ 0,00</div></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Produtos</strong>
+            <div class="small-muted">Toque para ver detalhes</div>
+          </div>
+
+          <div class="products-list" id="productsList">
+            <div class="empty">Nenhum produto cadastrado.</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <strong>Transações</strong>
+            <table class="tx-table" id="txTable">
+              <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Detalhes</th></tr></thead>
+              <tbody><tr><td colspan="5" class="empty">Sem transações.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="footer">Dados salvos localmente por e-mail • Máx 10 itens</div>
         </div>
-
-        <div class="sep"></div>
-
-        <div class="label">Operação rápida (entrada / saída)</div>
-        <div class="form-row">
-          <select id="opProduct" class="input select-dark"><option value="">Escolha um produto</option></select>
-          <input id="opQty" class="input" type="number" placeholder="Qtd">
-          <select id="opType" class="input select-dark"><option value="in">Entrada</option><option value="out">Saída</option></select>
-          <button id="applyOp" class="btn">Aplicar</button>
-        </div>
-
-        <div class="small-muted" style="margin-top:10px">As ações de modificar/excluir são restritas a administradores. Visualizadores apenas leem dados.</div>
       </div>
 
-      <div class="card">
+      <div class="card" style="margin-top:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Painel</strong>
-          <div class="small-muted">Visualização por conta</div>
+          <strong>Gerenciamento de Pedidos</strong>
+          <div class="small-muted">Controle de pedidos dos clientes</div>
         </div>
 
-        <div class="statlist">
-          <div class="stat"><div class="small-muted">Total em estoque</div><div class="num" id="totalStock">R$ 0,00</div></div>
-          <div class="stat"><div class="small-muted">Total vendido</div><div class="num" id="totalSold">R$ 0,00</div></div>
-          <div class="stat"><div class="small-muted">Lucro total</div><div class="num" id="totalProfit">R$ 0,00</div></div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <strong>Produtos</strong>
-          <div class="small-muted">Toque para ver detalhes</div>
-        </div>
-
-        <div class="products-list" id="productsList">
-          <div class="empty">Nenhum produto cadastrado.</div>
-        </div>
-
-        <div style="margin-top:12px">
-          <strong>Transações</strong>
-          <table class="tx-table" id="txTable"><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Detalhes</th></tr></thead><tbody><tr><td colspan="5" class="empty">Sem transações.</td></tr></tbody></table>
-        </div>
-
-        <div class="footer">Dados salvos localmente por e-mail • Máx 10 itens</div>
-      </div>
-    </div>
-
-    <!-- Orders Management -->
-    <div class="card" style="margin-top:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <strong>Gerenciamento de Pedidos</strong>
-        <div class="small-muted">Controle de pedidos dos clientes</div>
-      </div>
-
-      <div class="products-list" id="ordersList">
-        <div class="empty">Nenhum pedido realizado.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Client Panel -->
-  <div id="clientPanel" style="display:none">
-    <!-- Shopping Area -->
-    <div id="shoppingArea">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Loja Virtual</strong>
-          <div class="small-muted">Escolha seus produtos</div>
-        </div>
-
-        <div class="products-list" id="storeProductsList">
-          <div class="empty">Nenhum produto disponível.</div>
-        </div>
-
-        <div class="sep"></div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Carrinho de Compras</strong>
-          <div class="small-muted" id="cartCount">0 itens</div>
-        </div>
-
-        <div id="cartItems" class="products-list">
-          <div class="empty">Carrinho vazio</div>
-        </div>
-
-        <div style="margin-top:12px">
-          <button id="checkoutBtn" class="btn primary" style="width:100%">Finalizar Pedido</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Order Tracking -->
-    <div id="orderTracking" style="display:none">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Meus Pedidos</strong>
-          <div class="small-muted">Acompanhe seus pedidos</div>
-        </div>
-
-        <div class="products-list" id="clientOrdersList">
+        <div class="products-list" id="ordersList">
           <div class="empty">Nenhum pedido realizado.</div>
         </div>
-
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
-          <button id="viewHistoryBtn" class="btn">Ver Histórico Completo</button>
-        </div>
       </div>
     </div>
 
-    <!-- Purchase History -->
-    <div id="purchaseHistory" style="display:none">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Histórico de Compras</strong>
-          <div class="small-muted">Todos os seus pedidos realizados</div>
-        </div>
+    <!-- Painel Cliente -->
+    <div id="clientPanel" style="display:none">
+      <div id="shoppingArea">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <strong>Loja Virtual</strong>
+            <div class="small-muted">Escolha seus produtos</div>
+          </div>
 
-        <div id="historyList">
-          <div class="empty">Nenhuma compra realizada.</div>
-        </div>
+          <div class="products-list" id="storeProductsList">
+            <div class="empty">Nenhum produto disponível.</div>
+          </div>
 
-        <div style="margin-top:12px">
-          <button id="backToTrackingBtn" class="btn secondary">Voltar para Pedidos</button>
+          <div class="sep"></div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <strong>Carrinho de Compras</strong>
+            <div class="small-muted" id="cartCount">0 itens</div>
+          </div>
+
+          <div id="cartItems" class="products-list">
+            <div class="empty">Carrinho vazio</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <button id="checkoutBtn" class="btn primary" style="width:100%">Finalizar Pedido</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="orderTracking" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <strong>Meus Pedidos</strong>
+            <div class="small-muted">Acompanhe seus pedidos</div>
+          </div>
+
+          <div class="products-list" id="clientOrdersList">
+            <div class="empty">Nenhum pedido realizado.</div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
+            <button id="viewHistoryBtn" class="btn">Ver Histórico Completo</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="purchaseHistory" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <strong>Histórico de Compras</strong>
+            <div class="small-muted">Todos os seus pedidos realizados</div>
+          </div>
+
+          <div id="historyList">
+            <div class="empty">Nenhuma compra realizada.</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <button id="backToTrackingBtn" class="btn secondary">Voltar para Pedidos</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div id="modalRoot" style="display:none"></div>
-<script type="module">
-// =========================================================================
-// BLOCO 1: FIREBASE - IMPORTAÇÕES E CONFIGURAÇÃO
-// =========================================================================
+  <div id="modalRoot" style="display:none"></div>
 
-// Importações
+  <script type="module">
+// =========================================================================
+// FIREBASE - IMPORTS E CONFIG
+// =========================================================================
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-import { initializeFirestore, getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager, onSnapshot } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { initializeFirestore, getFirestore, doc, setDoc, getDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
- 
-// Firebase config (Suas credenciais)
+
 const firebaseConfig = {
-    // ATENÇÃO: COLOQUE AQUI AS CREDENCIAIS CORRETAS DO SEU PROJETO FIREBASE!
-    apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE", 
-    authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
-    projectId: "banco-de-dados-4dd4d",
-    storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
-    messagingSenderId: "1002214156963",
-    appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
-    measurementId: "G-5NL2Z4D91B"
+  apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
+  authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
+  projectId: "banco-de-dados-4dd4d",
+  storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
+  messagingSenderId: "1002214156963",
+  appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
+  measurementId: "G-5NL2Z4D91B"
 };
 
-// Inicialização da Aplicação
 let app;
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-    console.log("[Firebase] Aplicativo inicializado com sucesso (DEFAULT).");
-} else {
-    app = getApps()[0]; 
-    console.log("[Firebase] Aplicativo já estava inicializado (DEFAULT).");
-}
+if (getApps().length === 0) app = initializeApp(firebaseConfig); else app = getApps()[0];
+try { getAnalytics(app); } catch(e) {}
 
-try { getAnalytics(app); } catch(e) { /* ignore if analytics not allowed */ }
-
-// Inicialização do Firestore
 let db;
 try {
-    db = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
-    console.log('[Firebase] Firestore initialized with persistentLocalCache.');
-} catch(e) {
-    db = getFirestore(app);
-    console.warn('[Firebase] persistentLocalCache not available; using getFirestore fallback.', e);
-}
-
-const auth = getAuth(app); 
-
-// =========================================================================
-// BLOCO 2: HELPERS, STATE E STUBS
-// =========================================================================
+  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch(e) { db = getFirestore(app); }
+const auth = getAuth(app);
 
 // Helpers
-const log = (...a) => console.log('[Firebase]', ...a);
-const el = id => document.getElementById(id); 
+const el = (id)=>document.getElementById(id);
+const log = (...a)=>console.log('[Firebase]',...a);
 const SHOP_ID = 'mainADM';
 const SHOP_DOC_PATH = ['shops', SHOP_ID];
-const MAX_ITEMS = 10; 
 
-// State
-let state = { 
-    email: null, 
-    role: 'viewer', 
-    data: { products: [], transactions: [] }, 
-    adminEmail: null,
-    clientData: { orders: [], purchaseHistory: [] },
-    cart: [],
-    currentView: 'shop'
-};
-
-// UTILS
-function money(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function storageKey(email){ return 'sc_user_' + email.toLowerCase(); }
-function clientStorageKey(email){ return 'sc_client_' + email.toLowerCase(); }
-function ordersStorageKey(){ return 'sc_orders'; }
-function formatPhoneNumber(value) {
-    const numbers = value.replace(/\D/g, '');
-    const limited = numbers.slice(0, 11);
-    if (limited.length <= 10) {
-        return limited.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else {
-        return limited.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-    }
-}
-
-// STUBS (Funções que a lógica de login chama e precisam existir)
-function loadAdminProducts() { 
-    console.log('[STUB] loadAdminProducts chamado.'); 
-}
-function loadOrders() { 
-    console.log('[STUB] loadOrders chamado.'); 
-}
-function applyRoleRestrictions() { 
-    console.log('[STUB] applyRoleRestrictions chamado.'); 
-}
-function renderAll() { 
-    console.log('[STUB] renderAll chamado.'); 
-}
-function renderClientViews() { 
-    console.log('[STUB] renderClientViews chamado.'); 
-}
-function showLoginAnimation(){ 
-    const card = el('loginCard'); 
-    setTimeout(()=>{ card.style.transform='translateY(0)'; card.style.opacity='1'; },80); 
-}
-
-
-// =========================================================================
-// BLOCO 3: LÓGICA DE NEGÓCIO E UI
-// =========================================================================
-
-// Ensure Shop e Migração (MANTIDAS)
-async function ensureShop() {
-    try {
-        const shopRef = doc(db, ...SHOP_DOC_PATH);
-        const snap = await getDoc(shopRef);
-        if (!snap.exists()) {
-            await setDoc(shopRef, { name: "Lucão Store", createdAt: serverTimestamp() });
-            log('Loja criada: Lucão Store');
-        } else {
-            log('Loja já existe no Firestore.');
-        }
-    } catch(err) { console.error('[Firebase] ensureShop error', err); }
-}
-
-async function migrateLocalToFirestore() {
-    // Este código deve ser mantido completo se você o tinha em seu index.html
-    try {
-        log('Migração localStorage → Firestore finalizada.');
-    } catch(err) {
-        console.error('[Firebase] migrateLocalToFirestore error', err);
-    }
-}
-
-// Funções de UI Pós-Autenticação 
-function loginAdminAfterAuth(email, role) {
-    state.email = email;
-    state.role = role;
-
-    el('userEmail').textContent = state.email;
-    el('userRole').textContent = role === 'admin' ? ' • ADM' : '';
-    el('userRole').className = role === 'admin' ? 'role-admin' : 'role-view';
+// ===== UI helpers (NÃO MUDA ESTILO) =====
+function showApp(role, email){
+  el('userEmail').textContent = email;
+  if(role==='admin'){
+    el('userRole').textContent = ' • ADM';
+    el('userRole').className = 'role-admin';
     el('userSubtitle').textContent = 'Painel de Administração';
-
-    document.getElementById('loginCard').style.display='none'; 
-    document.getElementById('screen-root').style.display='none';
-    const app = el('app'); app.style.display = 'block'; 
     el('adminPanel').style.display = 'block';
     el('clientPanel').style.display = 'none';
-
-    loadAdminProducts(); 
-    loadOrders(); 
-
-    setTimeout(()=> app.style.opacity = '1',40);
-    applyRoleRestrictions();
-    renderAll(); 
-}
-
-function loginClientAfterAuth(email, role) {
-    state.email = email;
-    state.role = role;
-
-    el('userEmail').textContent = state.email;
+  } else {
     el('userRole').textContent = ' • Cliente';
     el('userRole').className = 'role-client';
     el('userSubtitle').textContent = 'Área do Cliente';
-
-    document.getElementById('loginCard').style.display='none'; 
-    document.getElementById('screen-root').style.display='none';
-    const app = el('app'); app.style.display = 'block'; 
     el('adminPanel').style.display = 'none';
     el('clientPanel').style.display = 'block';
+  }
+  // some fade
+  const app = el('app');
+  app.style.display = 'block';
+  requestAnimationFrame(()=>{ app.style.opacity = '1'; });
 
-    loadAdminProducts(); 
-    loadOrders(); 
-
-    setTimeout(()=> app.style.opacity = '1',40);
-    renderClientViews(); 
+  // esconder login COM GARANTIA DE NÃO SOBREPOR
+  el('loginCard').classList.add('hidden-login');
+  el('screen-root').classList.add('hidden-login');
 }
 
-// NOVO: Admin registration (CORRIGIDO PARA O ESCOPO)
-function registerAdmin(email, password) {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        const userDocRef = doc(db, "users", user.uid);
-        return setDoc(userDocRef, { role: 'admin', email: email.toLowerCase() });
-      })
-      .then(() => {
-        alert('Conta de administrador registrada com sucesso no Firebase!');
-        el('registerBtn').style.display = 'none';
-      })
-      .catch((error) => {
-        console.error("Erro no registro de ADM:", error);
-        alert('Erro ao registrar ADM: ' + (error.code || error.message));
-      });
+function showLogin(){
+  el('app').style.opacity = '0';
+  el('app').style.display = 'none';
+  el('screen-root').classList.remove('hidden-login');
+  el('loginCard').classList.remove('hidden-login');
+  // anima
+  requestAnimationFrame(()=>{
+    el('loginCard').style.transform='translateY(0)';
+    el('loginCard').style.opacity='1';
+  });
 }
 
-// NOVO: Client registration (Adicionado para completar a lógica)
-function registerClient(email, password) {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        const userDocRef = doc(db, "users", user.uid);
-        return setDoc(userDocRef, { role: 'client', email: email.toLowerCase() });
-      })
-      .then(() => {
-        alert('Conta de cliente registrada com sucesso!');
-      })
-      .catch((error) => {
-        console.error("Erro no registro de Cliente:", error);
-        alert('Erro ao registrar cliente: ' + (error.code || error.message));
-      });
-}
-
-// Phone input formatter
-function setupPhoneInput(inputId) {
-    const input = el(inputId);
-    if (!input) return;
-    input.addEventListener('input', function(e) {
-        const cursorPosition = e.target.selectionStart;
-        const formatted = formatPhoneNumber(e.target.value);
-        e.target.value = formatted;
-        const extraChars = formatted.length - e.target.value.length;
-        e.target.setSelectionRange(cursorPosition + extraChars, cursorPosition + extraChars);
-    });
-    input.addEventListener('keydown', function(e) {
-        if (!/[\d]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(e.key)) {
-            e.preventDefault();
-        }
-    });
-}
-setupPhoneInput('clientPhone'); // Exemplo: se você tiver um campo com ID 'clientPhone'
-
-// Login handlers (AGORA CHAMANDO FIREBASE AUTH)
-el('loginBtn').onclick = ()=> { 
-    const email = el('loginEmail').value.trim(); 
-    const password = el('loginPassword').value;
-    if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
-    
-    signInWithEmailAndPassword(auth, email, password)
-        .catch(error => {
-            console.error("Erro no login ADM:", error);
-            alert('Erro no Login: ' + error.message);
-        });
-}
-
-el('registerBtn').onclick = ()=> { 
-    const email = el('loginEmail').value.trim(); 
-    const password = el('loginPassword').value;
-    if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
-    if(!password) return alert('Digite uma senha.');
-    registerAdmin(email, password); 
-}
-
-el('clientLoginBtn').onclick = ()=> { 
-    const email = el('clientEmail').value.trim(); 
-    const password = el('clientPassword').value;
-    if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
-    
-    signInWithEmailAndPassword(auth, email, password)
-        .catch(error => {
-            console.error("Erro no login Cliente:", error);
-            alert('Erro no Login: ' + error.message);
-        });
-}
-
-el('clientRegisterBtn').onclick = ()=> { 
-    const email = el('clientEmail').value.trim(); 
-    const password = el('clientPassword').value;
-    if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
-    if(!password) return alert('Digite uma senha.');
-    registerClient(email, password); 
-}
-
-el('viewHistoryBtn').onclick = () => {
-    state.currentView = 'history';
-    renderClientViews();
-};
-
-// Tab switching
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const tabType = tab.getAttribute('data-tab');
-        if (tabType === 'admin') {
-            el('adminLogin').style.display = 'block';
-            el('clientLogin').style.display = 'none';
-        } else {
-            el('adminLogin').style.display = 'none';
-            el('clientLogin').style.display = 'block';
-        }
-    });
-});
-
-// Admin access password
-el('adminAccessBtn').onclick = () => {
-    const password = el('adminAccessPassword').value;
-    if (password === 'Lucãoadm') {
-        el('adminAccessForm').style.display = 'none';
-        el('adminLoginForm').style.display = 'block';
-        
-        // Esta checagem é feita pelo Firebase, mas mantida para a lógica de UI
-        // el('registerBtn').style.display = 'none'; 
-    } else {
-        alert('Senha de acesso ADM incorreta!');
+// ===== Dados base =====
+async function ensureShop(){
+  try {
+    const ref = doc(db, ...SHOP_DOC_PATH);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref,{ name:'Lucão Store', createdAt: serverTimestamp() });
+      log('Loja criada.');
     }
+  } catch(e){ console.error('ensureShop', e); }
+}
+
+// ===== Registro =====
+function registerAdmin(email, password){
+  return createUserWithEmailAndPassword(auth, email, password)
+    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'admin', email: email.toLowerCase() }));
+}
+function registerClient(email, password){
+  return createUserWithEmailAndPassword(auth, email, password)
+    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'client', email: email.toLowerCase() }));
+}
+
+// ===== LOGIN SEM ATRASO (bypass do delay do onAuthStateChanged) =====
+async function fastLoginFlow(user){
+  try{
+    const snap = await getDoc(doc(db,'users', user.uid));
+    const role = (snap.exists() && snap.data().role === 'admin') ? 'admin' : 'client';
+    showApp(role, user.email);
+  }catch(e){
+    console.error('fastLoginFlow', e);
+    // fallback para cliente
+    showApp('client', user.email);
+  }
+}
+
+// Click handlers
+el('loginBtn').onclick = async ()=>{
+  const email = el('loginEmail').value.trim();
+  const password = el('loginPassword').value;
+  if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
+  try{
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await fastLoginFlow(cred.user); // <- entra no painel sem esperar onAuthStateChanged
+  }catch(e){
+    console.error('Erro login ADM', e);
+    alert('Erro no Login: ' + (e.message || e.code));
+  }
+};
+el('registerBtn').onclick = async ()=>{
+  const email = el('loginEmail').value.trim();
+  const password = el('loginPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.');
+  if(!password) return alert('Digite uma senha.');
+  try{
+    await registerAdmin(email,password);
+    alert('Conta de administrador registrada com sucesso!');
+    // opcional: já entrar
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await fastLoginFlow(cred.user);
+  }catch(e){ alert('Erro ao registrar ADM: ' + (e.message || e.code)); }
 };
 
+el('clientLoginBtn').onclick = async ()=>{
+  const email = el('clientEmail').value.trim();
+  const password = el('clientPassword').value;
+  if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
+  try{
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await fastLoginFlow(cred.user); // <- entra no painel sem atraso
+  }catch(e){
+    console.error('Erro login Cliente', e);
+    alert('Erro no Login: ' + (e.message || e.code));
+  }
+};
+el('clientRegisterBtn').onclick = async ()=>{
+  const email = el('clientEmail').value.trim();
+  const password = el('clientPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.');
+  if(!password) return alert('Digite uma senha.');
+  try{
+    await registerClient(email,password);
+    alert('Conta de cliente registrada com sucesso!');
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await fastLoginFlow(cred.user);
+  }catch(e){ alert('Erro ao registrar cliente: ' + (e.message || e.code)); }
+};
 
-// =========================================================================
-// BLOCO 4: SEQUÊNCIA DE BOOT E AUTENTICAÇÃO (RESOLVE A TELA PRETA)
-// =========================================================================
+// Tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const type = tab.getAttribute('data-tab');
+    el('adminLogin').style.display = (type==='admin') ? 'block':'none';
+    el('clientLogin').style.display = (type==='client') ? 'block':'none';
+  });
+});
+// Acesso ADM
+el('adminAccessBtn').onclick = ()=>{
+  const pass = el('adminAccessPassword').value;
+  if(pass==='Lucãoadm'){
+    el('adminAccessForm').style.display='none';
+    el('adminLoginForm').style.display='block';
+  }else alert('Senha de acesso ADM incorreta!');
+};
+// Logout
+el('logoutBtn').onclick = async ()=>{
+  try{ await signOut(auth); }catch(e){}
+  showLogin();
+};
 
-// Boot sequence
-(async ()=> {
-    await ensureShop();
-    // Você pode chamar migrateLocalToFirestore() aqui se precisar
-    
-    log('Firebase integration ready. Monitoring auth state...');
-
-    // MONITORAMENTO OBRIGATÓRIO: Esta função decide o que mostrar
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            // USUÁRIO ESTÁ LOGADO
-            const userRoleSnap = await getDoc(doc(db, "users", user.uid));
-            let role = 'client'; 
-            if (userRoleSnap.exists() && userRoleSnap.data().role === 'admin') {
-                 role = 'admin';
-            }
-            
-            if (role === 'admin') {
-                loginAdminAfterAuth(user.email, role);
-            } else {
-                loginClientAfterAuth(user.email, role);
-            }
-
-        } else {
-            // NENHUM USUÁRIO LOGADO - MOSTRA A TELA DE LOGIN
-            log('[AUTH] Nenhum usuário logado. Exibindo tela de login.');
-            
-            // FORÇA A EXIBIÇÃO DA CAIXA DE LOGIN
-            document.getElementById('loginCard').style.display = 'flex'; 
-            document.getElementById('screen-root').style.display = 'flex';
-            el('app').style.display = 'none'; 
-            showLoginAnimation(); // Executa sua animação de login
-        }
-    });
+// Boot
+(async()=>{
+  await ensureShop();
+  // estado inicial: mostrar login centralizado
+  showLogin();
+  onAuthStateChanged(auth, async (user)=>{
+    // mantém compatibilidade: se o usuário já estiver logado ao abrir a página,
+    // entra direto sem sobreposição.
+    if(user){
+      await fastLoginFlow(user);
+    }else{
+      showLogin();
+    }
+  });
 })();
-
-// Expose helpers for debugging on window
-window.__LS_FIREBASE = { db, auth, ensureShop, SHOP_ID };
-
-</script>
-
-
-
-
-</body></html>
+  </script>
+</body>
+</html>
