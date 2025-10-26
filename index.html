@@ -418,9 +418,123 @@ select::-ms-expand { display: none; }
   <div id="modalRoot" style="display:none"></div>
 
   <script type="module">
+// =========================================================================
+// FIREBASE - IMPORTS E CONFIG
+// =========================================================================
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+import { 
+    initializeFirestore, getFirestore, doc, setDoc, getDoc, 
+    collection, query, where, orderBy, limit, getDocs, deleteDoc,
+    serverTimestamp, persistentLocalCache, persistentMultipleTabManager 
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
+  authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
+  projectId: "banco-de-dados-4dd4d",
+  storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
+  messagingSenderId: "1002214156963",
+  appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
+  measurementId: "G-5NL2Z4D91B"
+};
 
-    // =========================================================================
+let app;
+if (getApps().length === 0) app = initializeApp(firebaseConfig); else app = getApps()[0];
+try { getAnalytics(app); } catch(e) {}
+
+let db;
+try {
+  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch(e) { db = getFirestore(app); }
+const auth = getAuth(app);
+
+// Helpers
+const el = (id)=>document.getElementById(id);
+const log = (...a)=>console.log('[Firebase]',...a);
+const SHOP_ID = 'mainADM';
+const SHOP_DOC_PATH = ['shops', SHOP_ID];
+
+// ===== UI helpers =====
+function showApp(role, email){
+  el('userEmail').textContent = email;
+  if(role==='admin'){
+    el('userRole').textContent = ' • ADM';
+    el('userRole').className = 'role-admin';
+    el('userSubtitle').textContent = 'Painel de Administração';
+    el('adminPanel').style.display = 'block';
+    el('clientPanel').style.display = 'none';
+    
+    // Carregar dados do admin
+    loadProducts();
+    loadTransactions();
+  } else {
+    el('userRole').textContent = ' • Cliente';
+    el('userRole').className = 'role-client';
+    el('userSubtitle').textContent = 'Área do Cliente';
+    el('adminPanel').style.display = 'none';
+    el('clientPanel').style.display = 'block';
+  }
+  
+  // Mostrar app com animação
+  const app = el('app');
+  app.style.display = 'block';
+  requestAnimationFrame(()=>{ app.style.opacity = '1'; });
+
+  // Esconder login
+  el('loginCard').classList.add('hidden-login');
+  el('screen-root').classList.add('hidden-login');
+}
+
+function showLogin(){
+  el('app').style.opacity = '0';
+  el('app').style.display = 'none';
+  el('screen-root').classList.remove('hidden-login');
+  el('loginCard').classList.remove('hidden-login');
+  
+  requestAnimationFrame(()=>{
+    el('loginCard').style.transform='translateY(0)';
+    el('loginCard').style.opacity='1';
+  });
+}
+
+// ===== Dados base =====
+async function ensureShop(){
+  try {
+    const ref = doc(db, ...SHOP_DOC_PATH);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref,{ name:'Lucão Store', createdAt: serverTimestamp() });
+      log('Loja criada.');
+    }
+  } catch(e){ console.error('ensureShop', e); }
+}
+
+// ===== Registro =====
+function registerAdmin(email, password){
+  return createUserWithEmailAndPassword(auth, email, password)
+    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'admin', email: email.toLowerCase() }));
+}
+
+function registerClient(email, password){
+  return createUserWithEmailAndPassword(auth, email, password)
+    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'client', email: email.toLowerCase() }));
+}
+
+// ===== LOGIN SEM ATRASO =====
+async function fastLoginFlow(user){
+  try{
+    const snap = await getDoc(doc(db,'users', user.uid));
+    const role = (snap.exists() && snap.data().role === 'admin') ? 'admin' : 'client';
+    showApp(role, user.email);
+  }catch(e){
+    console.error('fastLoginFlow', e);
+    showApp('client', user.email);
+  }
+}
+
+// =========================================================================
 // GERENCIAMENTO DE PRODUTOS E ESTOQUE
 // =========================================================================
 
@@ -473,6 +587,11 @@ async function addOrUpdateProduct() {
     if (isNaN(quantity) || quantity < 0) return alert('Quantidade inválida');
     if (price < cost) return alert('Preço de venda não pode ser menor que custo');
     
+    // Verificar limite de 10 produtos
+    if (!currentEditingProductId && allProducts.length >= 10) {
+        return alert('Limite máximo de 10 produtos atingido!');
+    }
+    
     try {
         const productId = currentEditingProductId || `${user.uid}_${Date.now()}`;
         const productData = {
@@ -484,9 +603,13 @@ async function addOrUpdateProduct() {
             category: category || 'Geral',
             userId: user.uid,
             userEmail: user.email,
-            lastUpdated: serverTimestamp(),
-            createdAt: currentEditingProductId ? undefined : serverTimestamp()
+            lastUpdated: serverTimestamp()
         };
+        
+        // Adicionar createdAt apenas para novos produtos
+        if (!currentEditingProductId) {
+            productData.createdAt = serverTimestamp();
+        }
         
         await setDoc(doc(db, productsCollection, productId), productData);
         
@@ -521,22 +644,18 @@ async function applyQuickOperation() {
     
     try {
         let newQuantity = product.quantity;
-        let transactionType = '';
         
         if (operationType === 'in') {
             newQuantity += quantity;
-            transactionType = 'entrada';
         } else {
             if (product.quantity < quantity) {
                 return alert('Estoque insuficiente');
             }
             newQuantity -= quantity;
-            transactionType = 'saída';
         }
         
         // Atualizar produto
         await setDoc(doc(db, productsCollection, productId), {
-            ...product,
             quantity: newQuantity,
             lastUpdated: serverTimestamp()
         }, { merge: true });
@@ -550,7 +669,7 @@ async function applyQuickOperation() {
             `${operationType === 'in' ? 'Entrada' : 'Saída'} de estoque: ${quantity} unidades`
         );
         
-        alert(`Estoque atualizado! ${transactionType} de ${quantity} unidades`);
+        alert(`Estoque atualizado! ${operationType === 'in' ? 'Entrada' : 'Saída'} de ${quantity} unidades`);
         elements.opQty.value = '';
         loadProducts();
         
@@ -580,7 +699,6 @@ async function loadProducts() {
             const product = docSnap.data();
             allProducts.push(product);
             
-            const profit = (product.price - product.cost) * product.quantity;
             productsHtml.push(`
                 <div class="product" onclick="editProduct('${product.id}')">
                     <div>
@@ -708,7 +826,6 @@ function updateOperationsDropdown() {
 
 function updateStatistics() {
     let totalStockValue = 0;
-    let totalSoldValue = 0;
     let totalProfitValue = 0;
     
     allProducts.forEach(product => {
@@ -720,7 +837,7 @@ function updateStatistics() {
     });
     
     elements.totalStock.textContent = `R$ ${totalStockValue.toFixed(2)}`;
-    elements.totalSold.textContent = `R$ ${totalSoldValue.toFixed(2)}`;
+    elements.totalSold.textContent = `R$ 0,00`; // Implementar vendas depois
     elements.totalProfit.textContent = `R$ ${totalProfitValue.toFixed(2)}`;
 }
 
@@ -764,145 +881,21 @@ elements.addProduct.addEventListener('click', addOrUpdateProduct);
 elements.resetForm.addEventListener('click', resetProductForm);
 elements.applyOp.addEventListener('click', applyQuickOperation);
 
-// ===== INICIALIZAÇÃO =====
+// ===== HANDLERS DE LOGIN =====
 
-// Modifique a função showApp para carregar os dados quando o painel admin for mostrado
-const originalShowApp = showApp;
-showApp = function(role, email) {
-    originalShowApp(role, email);
-    
-    if (role === 'admin') {
-        // Carregar dados do admin
-        loadProducts();
-        loadTransactions();
-        
-        // Configurar atualização automática a cada 30 segundos
-        setInterval(() => {
-            loadProducts();
-            loadTransactions();
-        }, 30000);
-    }
-};
-// =========================================================================
-// FIREBASE - IMPORTS E CONFIG
-// =========================================================================
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-import { initializeFirestore, getFirestore, doc, setDoc, getDoc, serverTimestamp, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
-  authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
-  projectId: "banco-de-dados-4dd4d",
-  storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
-  messagingSenderId: "1002214156963",
-  appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
-  measurementId: "G-5NL2Z4D91B"
-};
-
-let app;
-if (getApps().length === 0) app = initializeApp(firebaseConfig); else app = getApps()[0];
-try { getAnalytics(app); } catch(e) {}
-
-let db;
-try {
-  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
-} catch(e) { db = getFirestore(app); }
-const auth = getAuth(app);
-
-// Helpers
-const el = (id)=>document.getElementById(id);
-const log = (...a)=>console.log('[Firebase]',...a);
-const SHOP_ID = 'mainADM';
-const SHOP_DOC_PATH = ['shops', SHOP_ID];
-
-// ===== UI helpers (NÃO MUDA ESTILO) =====
-function showApp(role, email){
-  el('userEmail').textContent = email;
-  if(role==='admin'){
-    el('userRole').textContent = ' • ADM';
-    el('userRole').className = 'role-admin';
-    el('userSubtitle').textContent = 'Painel de Administração';
-    el('adminPanel').style.display = 'block';
-    el('clientPanel').style.display = 'none';
-  } else {
-    el('userRole').textContent = ' • Cliente';
-    el('userRole').className = 'role-client';
-    el('userSubtitle').textContent = 'Área do Cliente';
-    el('adminPanel').style.display = 'none';
-    el('clientPanel').style.display = 'block';
-  }
-  // some fade
-  const app = el('app');
-  app.style.display = 'block';
-  requestAnimationFrame(()=>{ app.style.opacity = '1'; });
-
-  // esconder login COM GARANTIA DE NÃO SOBREPOR
-  el('loginCard').classList.add('hidden-login');
-  el('screen-root').classList.add('hidden-login');
-}
-
-function showLogin(){
-  el('app').style.opacity = '0';
-  el('app').style.display = 'none';
-  el('screen-root').classList.remove('hidden-login');
-  el('loginCard').classList.remove('hidden-login');
-  // anima
-  requestAnimationFrame(()=>{
-    el('loginCard').style.transform='translateY(0)';
-    el('loginCard').style.opacity='1';
-  });
-}
-
-// ===== Dados base =====
-async function ensureShop(){
-  try {
-    const ref = doc(db, ...SHOP_DOC_PATH);
-    const snap = await getDoc(ref);
-    if(!snap.exists()){
-      await setDoc(ref,{ name:'Lucão Store', createdAt: serverTimestamp() });
-      log('Loja criada.');
-    }
-  } catch(e){ console.error('ensureShop', e); }
-}
-
-// ===== Registro =====
-function registerAdmin(email, password){
-  return createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'admin', email: email.toLowerCase() }));
-}
-function registerClient(email, password){
-  return createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'client', email: email.toLowerCase() }));
-}
-
-// ===== LOGIN SEM ATRASO (bypass do delay do onAuthStateChanged) =====
-async function fastLoginFlow(user){
-  try{
-    const snap = await getDoc(doc(db,'users', user.uid));
-    const role = (snap.exists() && snap.data().role === 'admin') ? 'admin' : 'client';
-    showApp(role, user.email);
-  }catch(e){
-    console.error('fastLoginFlow', e);
-    // fallback para cliente
-    showApp('client', user.email);
-  }
-}
-
-// Click handlers
 el('loginBtn').onclick = async ()=>{
   const email = el('loginEmail').value.trim();
   const password = el('loginPassword').value;
   if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
   try{
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user); // <- entra no painel sem esperar onAuthStateChanged
+    await fastLoginFlow(cred.user);
   }catch(e){
     console.error('Erro login ADM', e);
     alert('Erro no Login: ' + (e.message || e.code));
   }
 };
+
 el('registerBtn').onclick = async ()=>{
   const email = el('loginEmail').value.trim();
   const password = el('loginPassword').value;
@@ -911,7 +904,6 @@ el('registerBtn').onclick = async ()=>{
   try{
     await registerAdmin(email,password);
     alert('Conta de administrador registrada com sucesso!');
-    // opcional: já entrar
     const cred = await signInWithEmailAndPassword(auth, email, password);
     await fastLoginFlow(cred.user);
   }catch(e){ alert('Erro ao registrar ADM: ' + (e.message || e.code)); }
@@ -923,12 +915,13 @@ el('clientLoginBtn').onclick = async ()=>{
   if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
   try{
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user); // <- entra no painel sem atraso
+    await fastLoginFlow(cred.user);
   }catch(e){
     console.error('Erro login Cliente', e);
     alert('Erro no Login: ' + (e.message || e.code));
   }
 };
+
 el('clientRegisterBtn').onclick = async ()=>{
   const email = el('clientEmail').value.trim();
   const password = el('clientPassword').value;
@@ -952,6 +945,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     el('clientLogin').style.display = (type==='client') ? 'block':'none';
   });
 });
+
 // Acesso ADM
 el('adminAccessBtn').onclick = ()=>{
   const pass = el('adminAccessPassword').value;
@@ -960,6 +954,7 @@ el('adminAccessBtn').onclick = ()=>{
     el('adminLoginForm').style.display='block';
   }else alert('Senha de acesso ADM incorreta!');
 };
+
 // Logout
 el('logoutBtn').onclick = async ()=>{
   try{ await signOut(auth); }catch(e){}
@@ -969,11 +964,9 @@ el('logoutBtn').onclick = async ()=>{
 // Boot
 (async()=>{
   await ensureShop();
-  // estado inicial: mostrar login centralizado
   showLogin();
+  
   onAuthStateChanged(auth, async (user)=>{
-    // mantém compatibilidade: se o usuário já estiver logado ao abrir a página,
-    // entra direto sem sobreposição.
     if(user){
       await fastLoginFlow(user);
     }else{
