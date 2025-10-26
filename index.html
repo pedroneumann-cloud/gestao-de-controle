@@ -418,6 +418,371 @@ select::-ms-expand { display: none; }
   <div id="modalRoot" style="display:none"></div>
 
   <script type="module">
+
+
+    // =========================================================================
+// GERENCIAMENTO DE PRODUTOS E ESTOQUE
+// =========================================================================
+
+// Referências do Firestore
+const productsCollection = 'products';
+const transactionsCollection = 'transactions';
+
+// Elementos UI
+const elements = {
+    pName: el('pName'),
+    pCost: el('pCost'),
+    pPrice: el('pPrice'),
+    pQty: el('pQty'),
+    pCat: el('pCat'),
+    addProduct: el('addProduct'),
+    resetForm: el('resetForm'),
+    opProduct: el('opProduct'),
+    opQty: el('opQty'),
+    opType: el('opType'),
+    applyOp: el('applyOp'),
+    productsList: el('productsList'),
+    txTable: el('txTable'),
+    totalStock: el('totalStock'),
+    totalSold: el('totalSold'),
+    totalProfit: el('totalProfit'),
+    countBadge: el('countBadge')
+};
+
+// Estado global
+let currentEditingProductId = null;
+let allProducts = [];
+
+// ===== FUNÇÕES PRINCIPAIS =====
+
+// Adicionar ou atualizar produto
+async function addOrUpdateProduct() {
+    const user = auth.currentUser;
+    if (!user) return alert('Usuário não autenticado');
+    
+    const name = elements.pName.value.trim();
+    const cost = parseFloat(elements.pCost.value);
+    const price = parseFloat(elements.pPrice.value);
+    const quantity = parseInt(elements.pQty.value);
+    const category = elements.pCat.value.trim();
+    
+    // Validações
+    if (!name) return alert('Nome do produto é obrigatório');
+    if (isNaN(cost) || cost < 0) return alert('Custo inválido');
+    if (isNaN(price) || price < 0) return alert('Preço de venda inválido');
+    if (isNaN(quantity) || quantity < 0) return alert('Quantidade inválida');
+    if (price < cost) return alert('Preço de venda não pode ser menor que custo');
+    
+    try {
+        const productId = currentEditingProductId || `${user.uid}_${Date.now()}`;
+        const productData = {
+            id: productId,
+            name,
+            cost,
+            price,
+            quantity,
+            category: category || 'Geral',
+            userId: user.uid,
+            userEmail: user.email,
+            lastUpdated: serverTimestamp(),
+            createdAt: currentEditingProductId ? undefined : serverTimestamp()
+        };
+        
+        await setDoc(doc(db, productsCollection, productId), productData);
+        
+        // Registrar transação
+        if (!currentEditingProductId) {
+            await addTransaction('create', productId, name, quantity, `Produto criado: ${name}`);
+        } else {
+            await addTransaction('update', productId, name, quantity, `Produto atualizado: ${name}`);
+        }
+        
+        alert(currentEditingProductId ? 'Produto atualizado!' : 'Produto adicionado!');
+        resetProductForm();
+        loadProducts();
+        
+    } catch (error) {
+        console.error('Erro ao salvar produto:', error);
+        alert('Erro ao salvar produto: ' + error.message);
+    }
+}
+
+// Operação rápida de estoque
+async function applyQuickOperation() {
+    const productId = elements.opProduct.value;
+    const quantity = parseInt(elements.opQty.value);
+    const operationType = elements.opType.value;
+    
+    if (!productId) return alert('Selecione um produto');
+    if (isNaN(quantity) || quantity <= 0) return alert('Quantidade inválida');
+    
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return alert('Produto não encontrado');
+    
+    try {
+        let newQuantity = product.quantity;
+        let transactionType = '';
+        
+        if (operationType === 'in') {
+            newQuantity += quantity;
+            transactionType = 'entrada';
+        } else {
+            if (product.quantity < quantity) {
+                return alert('Estoque insuficiente');
+            }
+            newQuantity -= quantity;
+            transactionType = 'saída';
+        }
+        
+        // Atualizar produto
+        await setDoc(doc(db, productsCollection, productId), {
+            ...product,
+            quantity: newQuantity,
+            lastUpdated: serverTimestamp()
+        }, { merge: true });
+        
+        // Registrar transação
+        await addTransaction(
+            operationType === 'in' ? 'stock_in' : 'stock_out',
+            productId,
+            product.name,
+            quantity,
+            `${operationType === 'in' ? 'Entrada' : 'Saída'} de estoque: ${quantity} unidades`
+        );
+        
+        alert(`Estoque atualizado! ${transactionType} de ${quantity} unidades`);
+        elements.opQty.value = '';
+        loadProducts();
+        
+    } catch (error) {
+        console.error('Erro na operação:', error);
+        alert('Erro na operação: ' + error.message);
+    }
+}
+
+// Carregar produtos
+async function loadProducts() {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        // Buscar produtos do usuário atual
+        const q = query(
+            collection(db, productsCollection),
+            where('userId', '==', user.uid)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        allProducts = [];
+        const productsHtml = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const product = docSnap.data();
+            allProducts.push(product);
+            
+            const profit = (product.price - product.cost) * product.quantity;
+            productsHtml.push(`
+                <div class="product" onclick="editProduct('${product.id}')">
+                    <div>
+                        <div class="pname">${product.name}</div>
+                        <div class="meta">${product.category} • Estoque: ${product.quantity}</div>
+                        <div class="meta">Custo: R$ ${product.cost.toFixed(2)} • Venda: R$ ${product.price.toFixed(2)}</div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="icon-btn" onclick="event.stopPropagation(); deleteProduct('${product.id}')">🗑️</button>
+                    </div>
+                </div>
+            `);
+        });
+        
+        elements.productsList.innerHTML = productsHtml.length > 0 
+            ? productsHtml.join('') 
+            : '<div class="empty">Nenhum produto cadastrado.</div>';
+        
+        // Atualizar dropdown de operações rápidas
+        updateOperationsDropdown();
+        
+        // Atualizar estatísticas
+        updateStatistics();
+        
+        // Atualizar badge de contagem
+        elements.countBadge.textContent = `${allProducts.length} / 10`;
+        
+    } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+        elements.productsList.innerHTML = '<div class="empty">Erro ao carregar produtos</div>';
+    }
+}
+
+// Carregar transações
+async function loadTransactions() {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        const q = query(
+            collection(db, transactionsCollection),
+            where('userId', '==', user.uid),
+            orderBy('timestamp', 'desc'),
+            limit(10)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const transactionsHtml = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const tx = docSnap.data();
+            const date = tx.timestamp?.toDate?.() || new Date();
+            transactionsHtml.push(`
+                <tr>
+                    <td>${date.toLocaleDateString()}</td>
+                    <td>${tx.productName}</td>
+                    <td>${getTransactionTypeLabel(tx.type)}</td>
+                    <td>${tx.quantity}</td>
+                    <td>${tx.description || ''}</td>
+                </tr>
+            `);
+        });
+        
+        const tbody = elements.txTable.querySelector('tbody');
+        tbody.innerHTML = transactionsHtml.length > 0 
+            ? transactionsHtml.join('') 
+            : '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
+        
+    } catch (error) {
+        console.error('Erro ao carregar transações:', error);
+    }
+}
+
+// ===== FUNÇÕES AUXILIARES =====
+
+function editProduct(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    elements.pName.value = product.name;
+    elements.pCost.value = product.cost;
+    elements.pPrice.value = product.price;
+    elements.pQty.value = product.quantity;
+    elements.pCat.value = product.category;
+    
+    currentEditingProductId = productId;
+    elements.addProduct.textContent = 'Atualizar Produto';
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    
+    try {
+        const product = allProducts.find(p => p.id === productId);
+        await deleteDoc(doc(db, productsCollection, productId));
+        
+        // Registrar transação de exclusão
+        await addTransaction('delete', productId, product.name, 0, `Produto excluído: ${product.name}`);
+        
+        alert('Produto excluído!');
+        loadProducts();
+        
+    } catch (error) {
+        console.error('Erro ao excluir produto:', error);
+        alert('Erro ao excluir produto: ' + error.message);
+    }
+}
+
+function resetProductForm() {
+    elements.pName.value = '';
+    elements.pCost.value = '';
+    elements.pPrice.value = '';
+    elements.pQty.value = '';
+    elements.pCat.value = '';
+    currentEditingProductId = null;
+    elements.addProduct.textContent = 'Adicionar / Atualizar';
+}
+
+function updateOperationsDropdown() {
+    elements.opProduct.innerHTML = '<option value="">Escolha um produto</option>';
+    allProducts.forEach(product => {
+        elements.opProduct.innerHTML += `<option value="${product.id}">${product.name} (Estoque: ${product.quantity})</option>`;
+    });
+}
+
+function updateStatistics() {
+    let totalStockValue = 0;
+    let totalSoldValue = 0;
+    let totalProfitValue = 0;
+    
+    allProducts.forEach(product => {
+        const stockValue = product.cost * product.quantity;
+        const potentialProfit = (product.price - product.cost) * product.quantity;
+        
+        totalStockValue += stockValue;
+        totalProfitValue += potentialProfit;
+    });
+    
+    elements.totalStock.textContent = `R$ ${totalStockValue.toFixed(2)}`;
+    elements.totalSold.textContent = `R$ ${totalSoldValue.toFixed(2)}`;
+    elements.totalProfit.textContent = `R$ ${totalProfitValue.toFixed(2)}`;
+}
+
+async function addTransaction(type, productId, productName, quantity, description) {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        await setDoc(doc(db, transactionsCollection, `${user.uid}_${Date.now()}`), {
+            type,
+            productId,
+            productName,
+            quantity,
+            description,
+            userId: user.uid,
+            userEmail: user.email,
+            timestamp: serverTimestamp()
+        });
+        
+        loadTransactions();
+        
+    } catch (error) {
+        console.error('Erro ao registrar transação:', error);
+    }
+}
+
+function getTransactionTypeLabel(type) {
+    const types = {
+        'create': 'Criação',
+        'update': 'Atualização',
+        'delete': 'Exclusão',
+        'stock_in': 'Entrada',
+        'stock_out': 'Saída'
+    };
+    return types[type] || type;
+}
+
+// ===== EVENT LISTENERS =====
+
+elements.addProduct.addEventListener('click', addOrUpdateProduct);
+elements.resetForm.addEventListener('click', resetProductForm);
+elements.applyOp.addEventListener('click', applyQuickOperation);
+
+// ===== INICIALIZAÇÃO =====
+
+// Modifique a função showApp para carregar os dados quando o painel admin for mostrado
+const originalShowApp = showApp;
+showApp = function(role, email) {
+    originalShowApp(role, email);
+    
+    if (role === 'admin') {
+        // Carregar dados do admin
+        loadProducts();
+        loadTransactions();
+        
+        // Configurar atualização automática a cada 30 segundos
+        setInterval(() => {
+            loadProducts();
+            loadTransactions();
+        }, 30000);
+    }
+};
 // =========================================================================
 // FIREBASE - IMPORTS E CONFIG
 // =========================================================================
