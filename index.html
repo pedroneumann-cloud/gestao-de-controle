@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sistema de Compra</title>
-  <style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sistema de Controle — Pro Final</title>
+<style>
 :root{
   --bg:#050505;
   --panel:#0b0d10;
@@ -19,14 +19,13 @@
   --danger:#ff7675;
   --warning:#fdcb6e;
   --info:#74b9ff;
-  --success:#00b894;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #0a0a0b 100%);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #0a0a0b 100%);color:var(--text);-webkit-font-smoothing:antialiased}
 a{color:inherit}
 .container{max-width:1100px;margin:18px auto;padding:16px}
-.center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.center-screen{min-height:80vh;display:flex;align-items:center;justify-content:center}
 .brand{display:flex;gap:12px;align-items:center}
 .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#006266);display:flex;align-items:center;justify-content:center;font-weight:800;color:#021}
 .title{font-size:20px;font-weight:700}
@@ -37,7 +36,7 @@ a{color:inherit}
 .btn.secondary{background:linear-gradient(90deg,var(--info),#0984e3);color:#021;border:none}
 .btn.warning{background:linear-gradient(90deg,var(--warning),#e17055);color:#021;border:none}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.005));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
 .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
 .input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:var(--input-bg);color:var(--text);font-size:14px}
 .select-dark{background:var(--select-bg);color:var(--text)}
@@ -56,11 +55,11 @@ a{color:inherit}
 .empty{opacity:0.7;color:var(--muted);padding:14px;text-align:center}
 
 /* LOGIN */
-.login-wrap{width:100%;max-width:440px;padding:22px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px);box-shadow:0 20px 40px rgba(0,0,0,0.5);}
+.login-wrap{width:100%;max-width:440px;padding:22px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px)}
 .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
 .subtle{color:var(--muted);font-size:13px;margin-bottom:10px}
 
-/* MODAL / DETAILS */
+/* MODAL / DETAILS (ensure black bg) */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:60}
 .modal{width:calc(100% - 40px);max-width:720px;background:#000;border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 22px 60px rgba(0,0,0,0.8);color:var(--text)}
 .tx-table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -76,7 +75,6 @@ a{color:inherit}
 
 /* small touches */
 .small{font-size:13px;color:var(--muted)}
-.label{font-size:13px;color:var(--muted);margin-bottom:4px;display:block;}
 .sep{height:1px;background:rgba(255,255,255,0.02);margin:12px 0;border-radius:2px}
 
 /* status badges */
@@ -86,7 +84,6 @@ a{color:inherit}
 .status-shipping{background:rgba(0,184,148,0.1);color:var(--accent)}
 .status-delivered{background:rgba(0,184,148,0.2);color:var(--accent);border:1px solid rgba(0,184,148,0.3)}
 .status-cancelled{background:rgba(255,118,117,0.1);color:var(--danger)}
-.status-paid{background:rgba(0,184,148,0.3);color:var(--success);border:1px solid rgba(0,184,148,0.5)}
 
 /* responsive */
 @media(max-width:900px){
@@ -94,16 +91,6 @@ a{color:inherit}
   .logo{width:46px;height:46px}
   .product{padding:10px}
   .center-screen{padding:18px}
-  .container{padding:12px}
-  .header{flex-direction:column;align-items:stretch;gap:8px}
-  .topbar{flex-direction:column;align-items:stretch;gap:8px}
-  .user-pill{justify-content:center;margin-top:8px}
-  .form-row{flex-direction:column;align-items:stretch}
-  .form-row > *{width:100% !important}
-  .statlist{flex-direction:column}
-  .product{flex-direction:column;align-items:stretch;gap:8px}
-  .product-actions{justify-content:center}
-  .modal{width:95%;margin:10px;padding:14px}
 }
 
 /* fix selects in chrome mobile */
@@ -113,918 +100,1360 @@ select::-ms-expand { display: none; }
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,0.01);padding:4px;border-radius:10px;margin-bottom:12px}
 .tab{flex:1;text-align:center;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;transition:background .12s}
 .tab.active{background:rgba(255,255,255,0.05)}
-
-/* purchase history */
-.history-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px}
-.history-date{font-size:12px;color:var(--muted)}
-.history-products{margin-top:6px}
-.history-product{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
-
-/* admin access */
-.admin-access{display:none;margin-top:12px}
-
-/* phone input */
-.phone-input{font-family:monospace;letter-spacing:1px}
-
-/* mobile optimizations */
-@media(max-width:480px){
-  .login-wrap{padding:16px;margin:10px}
-  .btn{padding:12px 16px;font-size:14px}
-  .input,select,textarea{padding:12px;font-size:16px}
-  .products-list{max-height:300px}
-}
-
-/* ===== CORREÇÃO DO LOGIN - ESSENCIAL ===== */
-#screen-root {
-  position: fixed;
-  inset: 0;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000 !important;
-  background: linear-gradient(180deg, var(--bg) 0%, #0a0a0b 100%);
-}
-
-#loginCard {
-  position: relative;
-  display: flex !important;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  max-width: 440px;
-  width: 90%;
-  margin: auto;
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.25s ease-out;
-  z-index: 1001 !important;
-  visibility: visible !important;
-}
-
-#app {
-  z-index: 10 !important;
-  position: relative;
-}
-
-/* Quando escondemos o login */
-.hidden-login {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
-}
-
-/* Garantir que os inputs sejam visíveis */
-.input {
-  background: var(--input-bg) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: var(--text) !important;
-  margin-bottom: 12px;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--accent) !important;
-}
-
-/* Labels visíveis */
-label.small {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--muted);
-}
-  </style>
+</style>
 </head>
 <body>
 
-  <script>
-// Debug temporário - remover depois
-console.log('Página carregada');
-console.log('Login card:', document.getElementById('loginCard'));
-console.log('Screen root:', document.getElementById('screen-root'));
+<div class="center-screen" id="screen-root">
+  <!-- LOGIN -->
+  <div class="login-wrap card" id="loginCard" style="transform:translateY(8px);opacity:0;transition:all .45s cubic-bezier(.2,.9,.25,1)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="brand"><div class="logo">SC</div><div><div class="login-title">Sistema de Controle</div><div class="subtle">Escolha seu tipo de acesso</div></div></div>
+      <div class="small-muted">Profissional • Dark</div>
+    </div>
 
-// Forçar visibilidade
-setTimeout(() => {
-    const loginCard = document.getElementById('loginCard');
-    const screenRoot = document.getElementById('screen-root');
-    
-    if (loginCard) {
-        loginCard.style.display = 'flex';
-        loginCard.style.visibility = 'visible';
-        loginCard.style.opacity = '1';
-    }
-    if (screenRoot) {
-        screenRoot.style.display = 'flex';
-        screenRoot.style.visibility = 'visible';
-    }
-}, 100);
-</script>
+    <div class="tabs" id="loginTabs">
+      <div class="tab active" data-tab="admin">Administrador</div>
+      <div class="tab" data-tab="client">Cliente</div>
+    </div>
 
-  <div class="center-screen" id="screen-root">
-    <!-- LOGIN -->
-    <div class="login-wrap card" id="loginCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="brand">
-          <div class="logo">SC</div>
-          <div>
-            <div class="login-title">Sistema de Compra</div>
-            <div class="subtle">Escolha seu tipo de acesso</div>
-          </div>
-        </div>
-        <div class="small-muted">Profissional • Dark</div>
+    <!-- Admin Login -->
+    <div id="adminLogin" style="display:block">
+      <div style="margin-top:8px">
+        <label class="small">E-mail</label>
+        <input id="loginEmail" class="input" placeholder="ex: pedroneumann@gmail.com" autocomplete="email"/>
       </div>
-
-      <div class="tabs" id="loginTabs">
-        <div class="tab active" data-tab="client">Cliente</div>
-        <div class="tab" data-tab="admin">Administrador</div>
+      <div style="margin-top:8px">
+        <label class="small">Senha</label>
+        <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
       </div>
-
-      <!-- Client Login -->
-      <div id="clientLogin" style="display:block">
-        <div style="margin-top:8px">
-          <label class="small">E-mail</label>
-          <input id="clientEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
-        </div>
-        <div style="margin-top:8px">
-          <label class="small">Senha</label>
-          <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px">
-          <button id="clientLoginBtn" class="btn primary">Entrar como Cliente</button>
-          <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
-        </div>
-        <div class="small" style="margin-top:10px;color:var(--muted)">É necessário fazer login para realizar compras.</div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="loginBtn" class="btn primary">Entrar</button>
+        <button id="registerBtn" class="btn">Registrar</button>
+        <button id="demoBtn" class="btn">Entrar como demo</button>
       </div>
+      <div class="small" style="margin-top:10px;color:var(--muted)">Dica: e-mails que contenham <strong>ADM</strong> recebem permissões de administrador.</div>
+    </div>
 
-      <!-- Admin Login -->
-      <div id="adminLogin" style="display:none">
-        <div id="adminAccessForm">
-          <div style="margin-top:8px">
-            <label class="small">Senha de Acesso ADM</label>
-            <input id="adminAccessPassword" type="password" class="input" placeholder="Digite a senha de acesso ADM">
-          </div>
-          <div style="margin-top:10px">
-            <button id="adminAccessBtn" class="btn primary">Acessar Painel ADM</button>
-          </div>
-        </div>
+    <!-- Client Login -->
+    <div id="clientLogin" style="display:none">
+      <div style="margin-top:8px">
+        <label class="small">E-mail</label>
+        <input id="clientEmail" class="input" placeholder="ex: cliente@gmail.com" autocomplete="email"/>
+      </div>
+      <div style="margin-top:8px">
+        <label class="small">Senha</label>
+        <input id="clientPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password"/>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="clientLoginBtn" class="btn secondary">Entrar como Cliente</button>
+        <button id="clientRegisterBtn" class="btn">Registrar Cliente</button>
+      </div>
+      <div style="margin-top:10px">
+        <button id="shopAsGuestBtn" class="btn warning" style="width:100%">Comprar sem cadastro</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <div id="adminLoginForm" class="admin-access">
-          <div style="margin-top:8px">
-            <label class="small">E-mail</label>
-            <input id="loginEmail" class="input" placeholder="seu-email@gmail.com" autocomplete="email">
-          </div>
-          <div style="margin-top:8px">
-            <label class="small">Senha</label>
-            <input id="loginPassword" type="password" class="input" placeholder="Sua senha" autocomplete="current-password">
-          </div>
-          <div style="margin-top:10px;display:flex;gap:8px">
-            <button id="loginBtn" class="btn primary">Entrar</button>
-            <button id="registerBtn" class="btn">Registrar ADM</button>
-          </div>
-        </div>
+<!-- APP (hidden until login) -->
+<div class="container" id="app" style="display:none;opacity:0;transition:opacity .35s">
+  <div class="header card topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Controle</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="user-pill" id="userInfo"><div class="small-muted">Logado como:</div><div id="userEmail" style="font-weight:800"></div><div id="userRole" class="role-view"></div></div>
+      <div style="display:flex;gap:8px">
+        <button id="exportBtn" class="btn">Exportar</button>
+        <label for="fileInput" class="btn">Importar</label>
+        <input id="fileInput" type="file" style="display:none" accept="application/json" />
+        <button id="logoutBtn" class="btn">Sair</button>
       </div>
     </div>
   </div>
 
-  <!-- APP -->
-  <div class="container" id="app" style="display:none;opacity:0;transition:opacity .35s">
-    <div class="header card topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="brand"><div class="logo">SC</div><div><div class="title">Sistema de Compra</div><div class="small-muted" id="userSubtitle">Gestão personalizada por e-mail</div></div></div>
+  <div id="notice" style="display:none;margin-bottom:10px" class="card small-muted"></div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" style="display:none">
+    <div class="grid">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>Cadastro / Estoque</strong><div class="small-muted">Máx 10 itens por conta</div></div>
+          <div class="limit-badge" id="countBadge">0 / 10</div>
+        </div>
+
+        <div class="label">Nome do produto</div>
+        <input id="pName" class="input" placeholder="Ex: Produto X" />
+
+        <div class="form-row">
+          <div style="flex:1">
+            <div class="label">Preço de custo (R$)</div>
+            <input id="pCost" class="input" type="number" min="0" step="0.01" />
+          </div>
+          <div style="width:140px">
+            <div class="label">Preço de venda (R$)</div>
+            <input id="pPrice" class="input" type="number" min="0" step="0.01" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div style="flex:1">
+            <div class="label">Quantidade</div>
+            <input id="pQty" class="input" type="number" min="0" step="1" />
+          </div>
+          <div style="width:140px">
+            <div class="label">Categoria</div>
+            <input id="pCat" class="input" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="addProduct" class="btn primary">Adicionar / Atualizar</button>
+          <button id="resetForm" class="btn">Limpar</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="label">Operação rápida (entrada / saída)</div>
+        <div class="form-row">
+          <select id="opProduct" class="input select-dark"><option value="">Escolha um produto</option></select>
+          <input id="opQty" class="input" type="number" placeholder="Qtd" />
+          <select id="opType" class="input select-dark"><option value="in">Entrada</option><option value="out">Saída</option></select>
+          <button id="applyOp" class="btn">Aplicar</button>
+        </div>
+
+        <div class="small-muted" style="margin-top:10px">As ações de modificar/excluir são restritas a administradores. Visualizadores apenas leem dados.</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="user-pill" id="userInfo"><div class="small-muted">Logado como:</div><div id="userEmail" style="font-weight:800"></div><div id="userRole" class="role-view"></div></div>
-        <div style="display:flex;gap:8px">
-          <button id="logoutBtn" class="btn">Sair</button>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong>Painel</strong>
+          <div class="small-muted">Visualização por conta</div>
+        </div>
+
+        <div class="statlist">
+          <div class="stat"><div class="small-muted">Total em estoque</div><div class="num" id="totalStock">R$ 0,00</div></div>
+          <div class="stat"><div class="small-muted">Total vendido</div><div class="num" id="totalSold">R$ 0,00</div></div>
+          <div class="stat"><div class="small-muted">Lucro total</div><div class="num" id="totalProfit">R$ 0,00</div></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Produtos</strong>
+          <div class="small-muted">Toque para ver detalhes</div>
+        </div>
+
+        <div class="products-list" id="productsList">
+          <div class="empty">Nenhum produto cadastrado.</div>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong>Transações</strong>
+          <table class="tx-table" id="txTable"><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Detalhes</th></tr></thead><tbody><tr><td colspan="5" class="empty">Sem transações.</td></tr></tbody></table>
+        </div>
+
+        <div class="footer">Dados salvos localmente por e-mail • Máx 10 itens</div>
+      </div>
+    </div>
+
+    <!-- Orders Management -->
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong>Gerenciamento de Pedidos</strong>
+        <div class="small-muted">Controle de pedidos dos clientes</div>
+      </div>
+
+      <div class="products-list" id="ordersList">
+        <div class="empty">Nenhum pedido realizado.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Panel -->
+  <div id="clientPanel" style="display:none">
+    <!-- Shopping Area -->
+    <div id="shoppingArea">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong>Loja Virtual</strong>
+          <div class="small-muted">Escolha seus produtos</div>
+        </div>
+
+        <div class="products-list" id="storeProductsList">
+          <div class="empty">Nenhum produto disponível.</div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <strong>Carrinho de Compras</strong>
+          <div class="small-muted" id="cartCount">0 itens</div>
+        </div>
+
+        <div id="cartItems" class="products-list">
+          <div class="empty">Carrinho vazio</div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="checkoutBtn" class="btn primary" style="width:100%">Finalizar Pedido</button>
         </div>
       </div>
     </div>
 
-    <div id="notice" style="display:none;margin-bottom:10px" class="card small-muted"></div>
-
-    <!-- Painel ADM -->
-    <div id="adminPanel" style="display:none">
-      <div class="grid">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div><strong>Cadastro / Estoque</strong><div class="small-muted">Máx 10 itens por conta</div></div>
-            <div class="limit-badge" id="countBadge">0 / 10</div>
-          </div>
-
-          <div class="label">Nome do produto</div>
-          <input id="pName" class="input" placeholder="Ex: Produto X">
-
-          <div class="form-row">
-            <div style="flex:1">
-              <div class="label">Preço de custo (R$)</div>
-              <input id="pCost" class="input" type="number" min="0" step="0.01">
-            </div>
-            <div style="width:140px">
-              <div class="label">Preço de venda (R$)</div>
-              <input id="pPrice" class="input" type="number" min="0" step="0.01">
-            </div>
-          </div>
-
-          <div class="form-row" style="margin-top:8px">
-            <div style="flex:1">
-              <div class="label">Quantidade</div>
-              <input id="pQty" class="input" type="number" min="0" step="1">
-            </div>
-            <div style="width:140px">
-              <div class="label">Categoria</div>
-              <input id="pCat" class="input">
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <button id="addProduct" class="btn primary">Adicionar / Atualizar</button>
-            <button id="resetForm" class="btn">Limpar</button>
-          </div>
-
-          <div class="sep"></div>
-
-          <div class="label">Operação rápida (entrada / saída)</div>
-          <div class="form-row">
-            <select id="opProduct" class="input select-dark"><option value="">Escolha um produto</option></select>
-            <input id="opQty" class="input" type="number" placeholder="Qtd">
-            <select id="opType" class="input select-dark"><option value="in">Entrada</option><option value="out">Saída</option></select>
-            <button id="applyOp" class="btn">Aplicar</button>
-          </div>
-
-          <div class="small-muted" style="margin-top:10px">As ações de modificar/excluir são restritas a administradores. Visualizadores apenas leem dados.</div>
-        </div>
-
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <strong>Painel</strong>
-            <div class="small-muted">Visualização por conta</div>
-          </div>
-
-          <div class="statlist">
-            <div class="stat"><div class="small-muted">Total em estoque</div><div class="num" id="totalStock">R$ 0,00</div></div>
-            <div class="stat"><div class="small-muted">Total vendido</div><div class="num" id="totalSold">R$ 0,00</div></div>
-            <div class="stat"><div class="small-muted">Lucro total</div><div class="num" id="totalProfit">R$ 0,00</div></div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <strong>Produtos</strong>
-            <div class="small-muted">Toque para ver detalhes</div>
-          </div>
-
-          <div class="products-list" id="productsList">
-            <div class="empty">Nenhum produto cadastrado.</div>
-          </div>
-
-          <div style="margin-top:12px">
-            <strong>Transações</strong>
-            <table class="tx-table" id="txTable">
-              <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Detalhes</th></tr></thead>
-              <tbody><tr><td colspan="5" class="empty">Sem transações.</td></tr></tbody>
-            </table>
-          </div>
-
-          <div class="footer">Dados salvos localmente por e-mail • Máx 10 itens</div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:16px">
+    <!-- Order Tracking -->
+    <div id="orderTracking" style="display:none">
+      <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <strong>Gerenciamento de Pedidos</strong>
-          <div class="small-muted">Controle de pedidos dos clientes</div>
+          <strong>Meus Pedidos</strong>
+          <div class="small-muted">Acompanhe seus pedidos</div>
         </div>
 
-        <div class="products-list" id="ordersList">
+        <div class="products-list" id="clientOrdersList">
           <div class="empty">Nenhum pedido realizado.</div>
         </div>
-      </div>
-    </div>
 
-    <!-- Painel Cliente -->
-    <div id="clientPanel" style="display:none">
-      <div id="shoppingArea">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <strong>Loja Virtual</strong>
-            <div class="small-muted">Escolha seus produtos</div>
-          </div>
-
-          <div class="products-list" id="storeProductsList">
-            <div class="empty">Nenhum produto disponível.</div>
-          </div>
-
-          <div class="sep"></div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <strong>Carrinho de Compras</strong>
-            <div class="small-muted" id="cartCount">0 itens</div>
-          </div>
-
-          <div id="cartItems" class="products-list">
-            <div class="empty">Carrinho vazio</div>
-          </div>
-
-          <div style="margin-top:12px">
-            <button id="checkoutBtn" class="btn primary" style="width:100%">Finalizar Pedido</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="orderTracking" style="display:none">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <strong>Meus Pedidos</strong>
-            <div class="small-muted">Acompanhe seus pedidos</div>
-          </div>
-
-          <div class="products-list" id="clientOrdersList">
-            <div class="empty">Nenhum pedido realizado.</div>
-          </div>
-
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-            <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
-            <button id="viewHistoryBtn" class="btn">Ver Histórico Completo</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="purchaseHistory" style="display:none">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <strong>Histórico de Compras</strong>
-            <div class="small-muted">Todos os seus pedidos realizados</div>
-          </div>
-
-          <div id="historyList">
-            <div class="empty">Nenhuma compra realizada.</div>
-          </div>
-
-          <div style="margin-top:12px">
-            <button id="backToTrackingBtn" class="btn secondary">Voltar para Pedidos</button>
-          </div>
+        <div style="margin-top:12px">
+          <button id="backToShopBtn" class="btn secondary">Voltar para a Loja</button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <div id="modalRoot" style="display:none"></div>
+<div id="modalRoot" style="display:none"></div>
 
-  <script type="module">
-// =========================================================================
-// FIREBASE - IMPORTS E CONFIG
-// =========================================================================
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-import { 
-    initializeFirestore, getFirestore, doc, setDoc, getDoc, 
-    collection, query, where, orderBy, limit, getDocs, deleteDoc,
-    serverTimestamp, persistentLocalCache, persistentMultipleTabManager 
-} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyATJ1ZGggZti53nko9LMemQFo7wHwaWXVE",
-  authDomain: "banco-de-dados-4dd4d.firebaseapp.com",
-  projectId: "banco-de-dados-4dd4d",
-  storageBucket: "banco-de-dados-4dd4d.firebasestorage.app",
-  messagingSenderId: "1002214156963",
-  appId: "1:1002214156963:web:43aeca6f25a71f42fced16",
-  measurementId: "G-5NL2Z4D91B"
+<script>
+// Helper & state
+const el = id => document.getElementById(id);
+const MAX_ITEMS = 10;
+let state = { 
+  email: null, 
+  role: 'viewer', 
+  data: { products: [], transactions: [] }, 
+  adminEmail: null,
+  clientData: { orders: [] },
+  cart: [],
+  currentView: 'shop'
 };
 
-let app;
-if (getApps().length === 0) app = initializeApp(firebaseConfig); else app = getApps()[0];
-try { getAnalytics(app); } catch(e) {}
+// utils
+function money(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function storageKey(email){ return 'sc_user_' + email.toLowerCase(); }
+function clientStorageKey(email){ return 'sc_client_' + email.toLowerCase(); }
+function ordersStorageKey(){ return 'sc_orders'; }
+function normalizeLocal(local){ return local.replace(/\W/g,'').toLowerCase(); }
 
-let db;
-try {
-  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
-} catch(e) { db = getFirestore(app); }
-const auth = getAuth(app);
+// Login animations
+function showLoginAnimation(){ const card = el('loginCard'); setTimeout(()=>{ card.style.transform='translateY(0)'; card.style.opacity='1'; },80); }
+showLoginAnimation();
 
-// Helpers
-const el = (id)=>document.getElementById(id);
-const log = (...a)=>console.log('[Firebase]',...a);
-const SHOP_ID = 'mainADM';
-const SHOP_DOC_PATH = ['shops', SHOP_ID];
-
-// ===== UI helpers =====
-function showApp(role, email){
-  el('userEmail').textContent = email;
-  if(role==='admin'){
-    el('userRole').textContent = ' • ADM';
-    el('userRole').className = 'role-admin';
-    el('userSubtitle').textContent = 'Painel de Administração';
-    el('adminPanel').style.display = 'block';
-    el('clientPanel').style.display = 'none';
-    
-    // Carregar dados do admin
-    loadProducts();
-    loadTransactions();
-  } else {
-    el('userRole').textContent = ' • Cliente';
-    el('userRole').className = 'role-client';
-    el('userSubtitle').textContent = 'Área do Cliente';
-    el('adminPanel').style.display = 'none';
-    el('clientPanel').style.display = 'block';
-  }
-  
-  // Mostrar app com animação
-  const app = el('app');
-  app.style.display = 'block';
-  requestAnimationFrame(()=>{ app.style.opacity = '1'; });
-
-  // Esconder login
-  el('loginCard').classList.add('hidden-login');
-  el('screen-root').classList.add('hidden-login');
-}
-
-function showLogin(){
-  el('app').style.opacity = '0';
-  el('app').style.display = 'none';
-  el('screen-root').classList.remove('hidden-login');
-  el('loginCard').classList.remove('hidden-login');
-  
-  requestAnimationFrame(()=>{
-    el('loginCard').style.transform='translateY(0)';
-    el('loginCard').style.opacity='1';
-  });
-}
-
-// ===== Dados base =====
-async function ensureShop(){
-  try {
-    const ref = doc(db, ...SHOP_DOC_PATH);
-    const snap = await getDoc(ref);
-    if(!snap.exists()){
-      await setDoc(ref,{ name:'Lucão Store', createdAt: serverTimestamp() });
-      log('Loja criada.');
-    }
-  } catch(e){ console.error('ensureShop', e); }
-}
-
-// ===== Registro =====
-function registerAdmin(email, password){
-  return createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'admin', email: email.toLowerCase() }));
-}
-
-function registerClient(email, password){
-  return createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => setDoc(doc(db,'users',cred.user.uid), { role:'client', email: email.toLowerCase() }));
-}
-
-// ===== LOGIN SEM ATRASO =====
-async function fastLoginFlow(user){
-  try{
-    const snap = await getDoc(doc(db,'users', user.uid));
-    const role = (snap.exists() && snap.data().role === 'admin') ? 'admin' : 'client';
-    showApp(role, user.email);
-  }catch(e){
-    console.error('fastLoginFlow', e);
-    showApp('client', user.email);
-  }
-}
-
-// =========================================================================
-// GERENCIAMENTO DE PRODUTOS E ESTOQUE
-// =========================================================================
-
-// Referências do Firestore
-const productsCollection = 'products';
-const transactionsCollection = 'transactions';
-
-// Elementos UI
-const elements = {
-    pName: el('pName'),
-    pCost: el('pCost'),
-    pPrice: el('pPrice'),
-    pQty: el('pQty'),
-    pCat: el('pCat'),
-    addProduct: el('addProduct'),
-    resetForm: el('resetForm'),
-    opProduct: el('opProduct'),
-    opQty: el('opQty'),
-    opType: el('opType'),
-    applyOp: el('applyOp'),
-    productsList: el('productsList'),
-    txTable: el('txTable'),
-    totalStock: el('totalStock'),
-    totalSold: el('totalSold'),
-    totalProfit: el('totalProfit'),
-    countBadge: el('countBadge')
-};
-
-// Estado global
-let currentEditingProductId = null;
-let allProducts = [];
-
-// ===== FUNÇÕES PRINCIPAIS =====
-
-// Adicionar ou atualizar produto
-async function addOrUpdateProduct() {
-    const user = auth.currentUser;
-    if (!user) return alert('Usuário não autenticado');
-    
-    const name = elements.pName.value.trim();
-    const cost = parseFloat(elements.pCost.value);
-    const price = parseFloat(elements.pPrice.value);
-    const quantity = parseInt(elements.pQty.value);
-    const category = elements.pCat.value.trim();
-    
-    // Validações
-    if (!name) return alert('Nome do produto é obrigatório');
-    if (isNaN(cost) || cost < 0) return alert('Custo inválido');
-    if (isNaN(price) || price < 0) return alert('Preço de venda inválido');
-    if (isNaN(quantity) || quantity < 0) return alert('Quantidade inválida');
-    if (price < cost) return alert('Preço de venda não pode ser menor que custo');
-    
-    // Verificar limite de 10 produtos
-    if (!currentEditingProductId && allProducts.length >= 10) {
-        return alert('Limite máximo de 10 produtos atingido!');
-    }
-    
-    try {
-        const productId = currentEditingProductId || `${user.uid}_${Date.now()}`;
-        const productData = {
-            id: productId,
-            name,
-            cost,
-            price,
-            quantity,
-            category: category || 'Geral',
-            userId: user.uid,
-            userEmail: user.email,
-            lastUpdated: serverTimestamp()
-        };
-        
-        // Adicionar createdAt apenas para novos produtos
-        if (!currentEditingProductId) {
-            productData.createdAt = serverTimestamp();
-        }
-        
-        await setDoc(doc(db, productsCollection, productId), productData);
-        
-        // Registrar transação
-        if (!currentEditingProductId) {
-            await addTransaction('create', productId, name, quantity, `Produto criado: ${name}`);
-        } else {
-            await addTransaction('update', productId, name, quantity, `Produto atualizado: ${name}`);
-        }
-        
-        alert(currentEditingProductId ? 'Produto atualizado!' : 'Produto adicionado!');
-        resetProductForm();
-        loadProducts();
-        
-    } catch (error) {
-        console.error('Erro ao salvar produto:', error);
-        alert('Erro ao salvar produto: ' + error.message);
-    }
-}
-
-// Operação rápida de estoque
-async function applyQuickOperation() {
-    const productId = elements.opProduct.value;
-    const quantity = parseInt(elements.opQty.value);
-    const operationType = elements.opType.value;
-    
-    if (!productId) return alert('Selecione um produto');
-    if (isNaN(quantity) || quantity <= 0) return alert('Quantidade inválida');
-    
-    const product = allProducts.find(p => p.id === productId);
-    if (!product) return alert('Produto não encontrado');
-    
-    try {
-        let newQuantity = product.quantity;
-        
-        if (operationType === 'in') {
-            newQuantity += quantity;
-        } else {
-            if (product.quantity < quantity) {
-                return alert('Estoque insuficiente');
-            }
-            newQuantity -= quantity;
-        }
-        
-        // Atualizar produto
-        await setDoc(doc(db, productsCollection, productId), {
-            quantity: newQuantity,
-            lastUpdated: serverTimestamp()
-        }, { merge: true });
-        
-        // Registrar transação
-        await addTransaction(
-            operationType === 'in' ? 'stock_in' : 'stock_out',
-            productId,
-            product.name,
-            quantity,
-            `${operationType === 'in' ? 'Entrada' : 'Saída'} de estoque: ${quantity} unidades`
-        );
-        
-        alert(`Estoque atualizado! ${operationType === 'in' ? 'Entrada' : 'Saída'} de ${quantity} unidades`);
-        elements.opQty.value = '';
-        loadProducts();
-        
-    } catch (error) {
-        console.error('Erro na operação:', error);
-        alert('Erro na operação: ' + error.message);
-    }
-}
-
-// Carregar produtos
-async function loadProducts() {
-    const user = auth.currentUser;
-    if (!user) return;
-    
-    try {
-        // Buscar produtos do usuário atual
-        const q = query(
-            collection(db, productsCollection),
-            where('userId', '==', user.uid)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        allProducts = [];
-        const productsHtml = [];
-        
-        querySnapshot.forEach((docSnap) => {
-            const product = docSnap.data();
-            allProducts.push(product);
-            
-            productsHtml.push(`
-                <div class="product" onclick="editProduct('${product.id}')">
-                    <div>
-                        <div class="pname">${product.name}</div>
-                        <div class="meta">${product.category} • Estoque: ${product.quantity}</div>
-                        <div class="meta">Custo: R$ ${product.cost.toFixed(2)} • Venda: R$ ${product.price.toFixed(2)}</div>
-                    </div>
-                    <div class="product-actions">
-                        <button class="icon-btn" onclick="event.stopPropagation(); deleteProduct('${product.id}')">🗑️</button>
-                    </div>
-                </div>
-            `);
-        });
-        
-        elements.productsList.innerHTML = productsHtml.length > 0 
-            ? productsHtml.join('') 
-            : '<div class="empty">Nenhum produto cadastrado.</div>';
-        
-        // Atualizar dropdown de operações rápidas
-        updateOperationsDropdown();
-        
-        // Atualizar estatísticas
-        updateStatistics();
-        
-        // Atualizar badge de contagem
-        elements.countBadge.textContent = `${allProducts.length} / 10`;
-        
-    } catch (error) {
-        console.error('Erro ao carregar produtos:', error);
-        elements.productsList.innerHTML = '<div class="empty">Erro ao carregar produtos</div>';
-    }
-}
-
-// Carregar transações
-async function loadTransactions() {
-    const user = auth.currentUser;
-    if (!user) return;
-    
-    try {
-        const q = query(
-            collection(db, transactionsCollection),
-            where('userId', '==', user.uid),
-            orderBy('timestamp', 'desc'),
-            limit(10)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const transactionsHtml = [];
-        
-        querySnapshot.forEach((docSnap) => {
-            const tx = docSnap.data();
-            const date = tx.timestamp?.toDate?.() || new Date();
-            transactionsHtml.push(`
-                <tr>
-                    <td>${date.toLocaleDateString()}</td>
-                    <td>${tx.productName}</td>
-                    <td>${getTransactionTypeLabel(tx.type)}</td>
-                    <td>${tx.quantity}</td>
-                    <td>${tx.description || ''}</td>
-                </tr>
-            `);
-        });
-        
-        const tbody = elements.txTable.querySelector('tbody');
-        tbody.innerHTML = transactionsHtml.length > 0 
-            ? transactionsHtml.join('') 
-            : '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
-        
-    } catch (error) {
-        console.error('Erro ao carregar transações:', error);
-    }
-}
-
-// ===== FUNÇÕES AUXILIARES =====
-
-function editProduct(productId) {
-    const product = allProducts.find(p => p.id === productId);
-    if (!product) return;
-    
-    elements.pName.value = product.name;
-    elements.pCost.value = product.cost;
-    elements.pPrice.value = product.price;
-    elements.pQty.value = product.quantity;
-    elements.pCat.value = product.category;
-    
-    currentEditingProductId = productId;
-    elements.addProduct.textContent = 'Atualizar Produto';
-}
-
-async function deleteProduct(productId) {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    
-    try {
-        const product = allProducts.find(p => p.id === productId);
-        await deleteDoc(doc(db, productsCollection, productId));
-        
-        // Registrar transação de exclusão
-        await addTransaction('delete', productId, product.name, 0, `Produto excluído: ${product.name}`);
-        
-        alert('Produto excluído!');
-        loadProducts();
-        
-    } catch (error) {
-        console.error('Erro ao excluir produto:', error);
-        alert('Erro ao excluir produto: ' + error.message);
-    }
-}
-
-function resetProductForm() {
-    elements.pName.value = '';
-    elements.pCost.value = '';
-    elements.pPrice.value = '';
-    elements.pQty.value = '';
-    elements.pCat.value = '';
-    currentEditingProductId = null;
-    elements.addProduct.textContent = 'Adicionar / Atualizar';
-}
-
-function updateOperationsDropdown() {
-    elements.opProduct.innerHTML = '<option value="">Escolha um produto</option>';
-    allProducts.forEach(product => {
-        elements.opProduct.innerHTML += `<option value="${product.id}">${product.name} (Estoque: ${product.quantity})</option>`;
-    });
-}
-
-function updateStatistics() {
-    let totalStockValue = 0;
-    let totalProfitValue = 0;
-    
-    allProducts.forEach(product => {
-        const stockValue = product.cost * product.quantity;
-        const potentialProfit = (product.price - product.cost) * product.quantity;
-        
-        totalStockValue += stockValue;
-        totalProfitValue += potentialProfit;
-    });
-    
-    elements.totalStock.textContent = `R$ ${totalStockValue.toFixed(2)}`;
-    elements.totalSold.textContent = `R$ 0,00`; // Implementar vendas depois
-    elements.totalProfit.textContent = `R$ ${totalProfitValue.toFixed(2)}`;
-}
-
-async function addTransaction(type, productId, productName, quantity, description) {
-    const user = auth.currentUser;
-    if (!user) return;
-    
-    try {
-        await setDoc(doc(db, transactionsCollection, `${user.uid}_${Date.now()}`), {
-            type,
-            productId,
-            productName,
-            quantity,
-            description,
-            userId: user.uid,
-            userEmail: user.email,
-            timestamp: serverTimestamp()
-        });
-        
-        loadTransactions();
-        
-    } catch (error) {
-        console.error('Erro ao registrar transação:', error);
-    }
-}
-
-function getTransactionTypeLabel(type) {
-    const types = {
-        'create': 'Criação',
-        'update': 'Atualização',
-        'delete': 'Exclusão',
-        'stock_in': 'Entrada',
-        'stock_out': 'Saída'
-    };
-    return types[type] || type;
-}
-
-// ===== EVENT LISTENERS =====
-
-elements.addProduct.addEventListener('click', addOrUpdateProduct);
-elements.resetForm.addEventListener('click', resetProductForm);
-elements.applyOp.addEventListener('click', applyQuickOperation);
-
-// ===== HANDLERS DE LOGIN =====
-
-el('loginBtn').onclick = async ()=>{
-  const email = el('loginEmail').value.trim();
-  const password = el('loginPassword').value;
-  if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
-  try{
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user);
-  }catch(e){
-    console.error('Erro login ADM', e);
-    alert('Erro no Login: ' + (e.message || e.code));
-  }
-};
-
-el('registerBtn').onclick = async ()=>{
-  const email = el('loginEmail').value.trim();
-  const password = el('loginPassword').value;
-  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.');
-  if(!password) return alert('Digite uma senha.');
-  try{
-    await registerAdmin(email,password);
-    alert('Conta de administrador registrada com sucesso!');
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user);
-  }catch(e){ alert('Erro ao registrar ADM: ' + (e.message || e.code)); }
-};
-
-el('clientLoginBtn').onclick = async ()=>{
-  const email = el('clientEmail').value.trim();
-  const password = el('clientPassword').value;
-  if(!email || !email.includes('@') || !password) return alert('Preencha e-mail e senha.');
-  try{
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user);
-  }catch(e){
-    console.error('Erro login Cliente', e);
-    alert('Erro no Login: ' + (e.message || e.code));
-  }
-};
-
-el('clientRegisterBtn').onclick = async ()=>{
-  const email = el('clientEmail').value.trim();
-  const password = el('clientPassword').value;
-  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.');
-  if(!password) return alert('Digite uma senha.');
-  try{
-    await registerClient(email,password);
-    alert('Conta de cliente registrada com sucesso!');
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    await fastLoginFlow(cred.user);
-  }catch(e){ alert('Erro ao registrar cliente: ' + (e.message || e.code)); }
-};
-
-// Tabs
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    const type = tab.getAttribute('data-tab');
-    el('adminLogin').style.display = (type==='admin') ? 'block':'none';
-    el('clientLogin').style.display = (type==='client') ? 'block':'none';
+    
+    const tabType = tab.getAttribute('data-tab');
+    if (tabType === 'admin') {
+      el('adminLogin').style.display = 'block';
+      el('clientLogin').style.display = 'none';
+    } else {
+      el('adminLogin').style.display = 'none';
+      el('clientLogin').style.display = 'block';
+    }
   });
 });
 
-// Acesso ADM
-el('adminAccessBtn').onclick = ()=>{
-  const pass = el('adminAccessPassword').value;
-  if(pass==='Lucãoadm'){
-    el('adminAccessForm').style.display='none';
-    el('adminLoginForm').style.display='block';
-  }else alert('Senha de acesso ADM incorreta!');
-};
+// Login handlers
+el('loginBtn').onclick = ()=> { 
+  const email = el('loginEmail').value.trim(); 
+  const password = el('loginPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
+  if(!password) return alert('Digite sua senha.');
+  loginAdmin(email, password); 
+}
 
-// Logout
-el('logoutBtn').onclick = async ()=>{
-  try{ await signOut(auth); }catch(e){}
-  showLogin();
-};
+el('registerBtn').onclick = ()=> { 
+  const email = el('loginEmail').value.trim(); 
+  const password = el('loginPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
+  if(!password) return alert('Digite uma senha.');
+  registerAdmin(email, password); 
+}
 
-// Boot
-(async()=>{
-  await ensureShop();
-  showLogin();
+el('demoBtn').onclick = ()=> { 
+  const email = 'pedroneumannADM@example.com'; 
+  el('loginEmail').value = email; 
+  el('loginPassword').value = 'demo123';
+  loginAdmin(email, 'demo123'); 
+}
+
+el('clientLoginBtn').onclick = ()=> { 
+  const email = el('clientEmail').value.trim(); 
+  const password = el('clientPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
+  if(!password) return alert('Digite sua senha.');
+  loginClient(email, password); 
+}
+
+el('clientRegisterBtn').onclick = ()=> { 
+  const email = el('clientEmail').value.trim(); 
+  const password = el('clientPassword').value;
+  if(!email || !email.includes('@')) return alert('Digite um e-mail válido.'); 
+  if(!password) return alert('Digite uma senha.');
+  registerClient(email, password); 
+}
+
+el('shopAsGuestBtn').onclick = ()=> { 
+  openShopAsGuest(); 
+}
+
+// Admin registration and login
+function registerAdmin(email, password) {
+  const key = storageKey(email);
+  if(localStorage.getItem(key)) {
+    return alert('Este e-mail já está registrado.');
+  }
   
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      await fastLoginFlow(user);
-    }else{
-      showLogin();
+  // Store admin credentials
+  const adminData = {
+    email: email.toLowerCase(),
+    password: password,
+    data: { products: [], transactions: [] },
+    registeredAt: Date.now()
+  };
+  
+  localStorage.setItem(key, JSON.stringify(adminData));
+  alert('Conta de administrador registrada com sucesso!');
+}
+
+function loginAdmin(email, password) {
+  const key = storageKey(email);
+  const stored = localStorage.getItem(key);
+  
+  if(!stored) {
+    return alert('E-mail não encontrado. Registre-se primeiro.');
+  }
+  
+  try {
+    const adminData = JSON.parse(stored);
+    if(adminData.password !== password) {
+      return alert('Senha incorreta.');
+    }
+    
+    state.email = email.toLowerCase();
+    const parts = state.email.split('@');
+    const local = parts[0];
+    state.role = /adm/i.test(local) ? 'admin' : 'viewer';
+    state.adminEmail = state.role === 'admin' ? state.email : deriveAdminEmail(state.email);
+    state.data = adminData.data || { products: [], transactions: [] };
+    
+    // Load orders
+    loadOrders();
+    
+    // Show app
+    el('userEmail').textContent = state.email;
+    el('userRole').textContent = state.role === 'admin' ? ' • ADM' : '';
+    el('userRole').className = state.role === 'admin' ? 'role-admin' : 'role-view';
+    el('userSubtitle').textContent = 'Painel de Administração';
+    
+    document.getElementById('loginCard').style.display='none';
+    document.getElementById('screen-root').style.display='none';
+    const app = el('app'); app.style.display = 'block';
+    el('adminPanel').style.display = 'block';
+    el('clientPanel').style.display = 'none';
+    
+    setTimeout(()=> app.style.opacity = '1',40);
+    applyRoleRestrictions();
+    renderAll();
+    
+    if(state.role === 'viewer'){
+      el('notice').style.display = 'block';
+      el('notice').textContent = `Você está visualizando o estoque do administrador ${state.adminEmail} (modo leitura).`;
+    } else {
+      el('notice').style.display = 'none';
+    }
+  } catch(e) {
+    alert('Erro ao fazer login: ' + e.message);
+  }
+}
+
+// Client registration and login
+function registerClient(email, password) {
+  const key = clientStorageKey(email);
+  if(localStorage.getItem(key)) {
+    return alert('Este e-mail já está registrado.');
+  }
+  
+  // Store client credentials
+  const clientData = {
+    email: email.toLowerCase(),
+    password: password,
+    orders: [],
+    registeredAt: Date.now()
+  };
+  
+  localStorage.setItem(key, JSON.stringify(clientData));
+  alert('Conta de cliente registrada com sucesso!');
+}
+
+function loginClient(email, password) {
+  const key = clientStorageKey(email);
+  const stored = localStorage.getItem(key);
+  
+  if(!stored) {
+    return alert('E-mail não encontrado. Registre-se primeiro.');
+  }
+  
+  try {
+    const clientData = JSON.parse(stored);
+    if(clientData.password !== password) {
+      return alert('Senha incorreta.');
+    }
+    
+    state.email = email.toLowerCase();
+    state.role = 'client';
+    state.clientData = clientData;
+    
+    // Load admin data for products
+    loadAdminProducts();
+    
+    // Show app
+    el('userEmail').textContent = state.email;
+    el('userRole').textContent = ' • Cliente';
+    el('userRole').className = 'role-client';
+    el('userSubtitle').textContent = 'Área do Cliente';
+    
+    document.getElementById('loginCard').style.display='none';
+    document.getElementById('screen-root').style.display='none';
+    const app = el('app'); app.style.display = 'block';
+    el('adminPanel').style.display = 'none';
+    el('clientPanel').style.display = 'block';
+    
+    setTimeout(()=> app.style.opacity = '1',40);
+    renderClientViews();
+    
+  } catch(e) {
+    alert('Erro ao fazer login: ' + e.message);
+  }
+}
+
+function openShopAsGuest() {
+  state.email = 'guest@example.com';
+  state.role = 'guest';
+  
+  // Load admin data for products
+  loadAdminProducts();
+  
+  // Show app
+  el('userEmail').textContent = 'Visitante';
+  el('userRole').textContent = ' • Convidado';
+  el('userRole').className = 'role-view';
+  el('userSubtitle').textContent = 'Loja Virtual';
+  
+  document.getElementById('loginCard').style.display='none';
+  document.getElementById('screen-root').style.display='none';
+  const app = el('app'); app.style.display = 'block';
+  el('adminPanel').style.display = 'none';
+  el('clientPanel').style.display = 'block';
+  
+  setTimeout(()=> app.style.opacity = '1',40);
+  renderClientViews();
+}
+
+function loadAdminProducts() {
+  // Try to find an admin account to load products from
+  const adminKeys = Object.keys(localStorage).filter(key => key.startsWith('sc_user_'));
+  if (adminKeys.length > 0) {
+    const adminData = JSON.parse(localStorage.getItem(adminKeys[0]));
+    if (adminData && adminData.data) {
+      state.data = adminData.data;
+    }
+  }
+}
+
+function loadOrders() {
+  const ordersKey = ordersStorageKey();
+  const stored = localStorage.getItem(ordersKey);
+  if (stored) {
+    try {
+      state.orders = JSON.parse(stored);
+    } catch(e) {
+      state.orders = [];
+    }
+  } else {
+    state.orders = [];
+  }
+}
+
+function saveOrders() {
+  const ordersKey = ordersStorageKey();
+  localStorage.setItem(ordersKey, JSON.stringify(state.orders));
+}
+
+// Determine admin mapping:
+function deriveAdminEmail(email){
+  const parts = email.split('@');
+  const local = parts[0] || '';
+  const domain = parts[1] || 'example.com';
+  if(/adm/i.test(local)) return email.toLowerCase();
+  const adminLocal = local + 'adm';
+  return (adminLocal + '@' + domain).toLowerCase();
+}
+
+// LOGOUT
+el('logoutBtn').onclick = ()=> {
+  if(!confirm('Deseja sair?')) return;
+  state = { 
+    email: null, 
+    role: 'viewer', 
+    data: { products: [], transactions: [] }, 
+    adminEmail: null,
+    clientData: { orders: [] },
+    cart: [],
+    currentView: 'shop'
+  };
+  el('app').style.display = 'none'; 
+  el('app').style.opacity = '0';
+  document.getElementById('screen-root').style.display='flex';
+  document.getElementById('loginCard').style.display='block';
+  showLoginAnimation();
+}
+
+// Persistence
+function saveState(){
+  if(!state.email || state.role === 'guest') return;
+  
+  if(state.role === 'admin' || state.role === 'viewer') {
+    const key = storageKey(state.role === 'admin' ? state.email : state.adminEmail);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const adminData = JSON.parse(stored);
+      adminData.data = state.data;
+      localStorage.setItem(key, JSON.stringify(adminData));
+    }
+  } else if (state.role === 'client') {
+    const key = clientStorageKey(state.email);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const clientData = JSON.parse(stored);
+      clientData.orders = state.clientData.orders;
+      localStorage.setItem(key, JSON.stringify(clientData));
+    }
+  }
+}
+
+// UI helpers
+function updateCounts(){ el('countBadge').textContent = state.data.products.length + ' / ' + MAX_ITEMS; }
+function refreshProductSelect(){
+  const sel = el('opProduct');
+  sel.innerHTML = '<option value="">Escolha um produto</option>';
+  state.data.products.forEach(p=>{
+    const opt = document.createElement('option'); opt.value = p.id; opt.textContent = p.name; sel.appendChild(opt);
+  });
+}
+
+function renderProducts(){
+  const container = el('productsList');
+  container.innerHTML = '';
+  if(state.data.products.length === 0){
+    container.innerHTML = '<div class="empty">Nenhum produto cadastrado.</div>';
+    renderTransactions();
+    updateCounts();
+    return;
+  }
+  state.data.products.forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.onclick = ()=> openProductModal(p.id);
+    const left = document.createElement('div');
+    left.style.display='flex'; left.style.flexDirection='column';
+    const name = document.createElement('div'); name.className='pname'; name.textContent = p.name;
+    const meta = document.createElement('div'); meta.className='meta'; meta.textContent = `${p.qty} un • Custo ${money(p.cost)} • Venda ${money(p.price)} • Lucro unit ${money(p.price - p.cost)}`;
+    left.appendChild(name); left.appendChild(meta);
+    const actions = document.createElement('div'); actions.className='product-actions';
+    if(state.role === 'admin'){
+      const editBtn = document.createElement('button'); editBtn.className='icon-btn'; editBtn.textContent='Editar';
+      editBtn.onclick = (ev)=>{ ev.stopPropagation(); loadIntoForm(p.id); };
+      const delBtn = document.createElement('button'); delBtn.className='icon-btn'; delBtn.textContent='Excluir';
+      delBtn.onclick = (ev)=>{ ev.stopPropagation(); if(confirm('Excluir produto?')){ deleteProduct(p.id); } };
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+    } else {
+      const info = document.createElement('div'); info.className='small-muted'; info.textContent='Apenas visualização';
+      actions.appendChild(info);
+    }
+    div.appendChild(left); div.appendChild(actions);
+    container.appendChild(div);
+  });
+  renderTransactions();
+  updateCounts();
+}
+
+function renderTransactions(){
+  const tbody = el('txTable').querySelector('tbody');
+  if(state.data.transactions.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Sem transações.</td></tr>';
+    updateSummary();
+    return;
+  }
+  tbody.innerHTML = '';
+  state.data.transactions.slice().reverse().forEach(tx=>{
+    const tr = document.createElement('tr');
+    const d = new Date(tx.ts).toLocaleString();
+    tr.innerHTML = `<td>${d}</td><td>${tx.productName}</td><td>${tx.type==='in'?'Entrada':'Saída'}</td><td>${tx.qty}</td><td>${tx.details||''}</td>`;
+    tbody.appendChild(tr);
+  });
+  updateSummary();
+}
+
+function updateSummary(){
+  const stock = state.data.products.reduce((acc,p)=> acc + (p.qty * p.cost), 0);
+  const sold = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * tx.price), 0);
+  const profit = state.data.transactions.filter(tx=>tx.type==='out').reduce((acc,tx)=> acc + (tx.qty * (tx.price - tx.cost)), 0);
+  el('totalStock').textContent = money(stock);
+  el('totalSold').textContent = money(sold);
+  el('totalProfit').textContent = money(profit);
+}
+
+function applyRoleRestrictions(){
+  const isAdmin = state.role === 'admin';
+  const inputs = ['pName','pCost','pPrice','pQty','pCat','opProduct','opQty','opType'];
+  inputs.forEach(id=> el(id).disabled = !isAdmin);
+  el('addProduct').disabled = !isAdmin;
+  el('resetForm').disabled = !isAdmin;
+  el('applyOp').disabled = !isAdmin;
+  el('exportBtn').disabled = false;
+  el('fileInput').disabled = !isAdmin;
+}
+
+function renderAll(){
+  renderProducts();
+  refreshProductSelect();
+}
+
+// Product form
+let editingId = null;
+el('addProduct').onclick = ()=> {
+  if(state.data.products.length >= MAX_ITEMS && !editingId){
+    alert(`Limite de ${MAX_ITEMS} produtos atingido.`);
+    return;
+  }
+  const name = el('pName').value.trim();
+  const cost = parseFloat(el('pCost').value) || 0;
+  const price = parseFloat(el('pPrice').value) || 0;
+  const qty = parseInt(el('pQty').value) || 0;
+  const cat = el('pCat').value.trim();
+  if(!name) return alert('Digite um nome.');
+  if(cost < 0 || price < 0 || qty < 0) return alert('Valores não podem ser negativos.');
+  if(price < cost) return alert('Preço de venda não pode ser menor que o custo.');
+  
+  if(editingId){
+    // Update
+    const idx = state.data.products.findIndex(p=> p.id === editingId);
+    if(idx >= 0){
+      state.data.products[idx] = { ...state.data.products[idx], name, cost, price, qty, cat };
+      addTransaction('edit', qty, `Produto atualizado: ${name}`, name, cost, price);
+    }
+    editingId = null;
+  } else {
+    // Add
+    const id = uid();
+    state.data.products.push({ id, name, cost, price, qty, cat });
+    addTransaction('in', qty, `Novo produto: ${name}`, name, cost, price);
+  }
+  saveState();
+  renderAll();
+  resetForm();
+}
+
+el('resetForm').onclick = resetForm;
+function resetForm(){
+  el('pName').value = '';
+  el('pCost').value = '';
+  el('pPrice').value = '';
+  el('pQty').value = '';
+  el('pCat').value = '';
+  editingId = null;
+  el('addProduct').textContent = 'Adicionar / Atualizar';
+}
+
+function loadIntoForm(id){
+  const p = state.data.products.find(p=> p.id === id);
+  if(!p) return;
+  el('pName').value = p.name;
+  el('pCost').value = p.cost;
+  el('pPrice').value = p.price;
+  el('pQty').value = p.qty;
+  el('pCat').value = p.cat || '';
+  editingId = id;
+  el('addProduct').textContent = 'Atualizar Produto';
+}
+
+function deleteProduct(id){
+  const idx = state.data.products.findIndex(p=> p.id === id);
+  if(idx < 0) return;
+  const p = state.data.products[idx];
+  state.data.products.splice(idx,1);
+  addTransaction('out', p.qty, `Produto excluído: ${p.name}`, p.name, p.cost, p.price);
+  saveState();
+  renderAll();
+}
+
+// Operations
+el('applyOp').onclick = ()=> {
+  const pid = el('opProduct').value;
+  const qty = parseInt(el('opQty').value) || 0;
+  const type = el('opType').value;
+  if(!pid) return alert('Escolha um produto.');
+  if(qty <= 0) return alert('Digite uma quantidade válida.');
+  
+  const p = state.data.products.find(p=> p.id === pid);
+  if(!p) return alert('Produto não encontrado.');
+  
+  if(type === 'out' && p.qty < qty) return alert('Estoque insuficiente.');
+  
+  p.qty += type === 'in' ? qty : -qty;
+  addTransaction(type, qty, `Operação: ${type==='in'?'Entrada':'Saída'} de ${qty} un`, p.name, p.cost, p.price);
+  saveState();
+  renderAll();
+  el('opQty').value = '';
+}
+
+function addTransaction(type, qty, details, productName, cost, price){
+  state.data.transactions.push({
+    ts: Date.now(),
+    type, qty, details, productName, cost, price
+  });
+}
+
+// Export / Import
+el('exportBtn').onclick = ()=> {
+  const dataStr = JSON.stringify(state.data, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `estoque_${state.email}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+el('fileInput').onchange = (ev)=> {
+  if(!state.role === 'admin') return alert('Apenas administradores podem importar.');
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=> {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if(!imported.products || !imported.transactions) throw new Error('Formato inválido.');
+      state.data = imported;
+      saveState();
+      renderAll();
+      alert('Dados importados com sucesso.');
+    } catch(err){
+      alert('Erro ao importar: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+// Modal
+function openProductModal(id){
+  const p = state.data.products.find(p=> p.id === id);
+  if(!p) return;
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.onclick = (ev)=> { if(ev.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong>Detalhes do Produto</strong>
+        <button class="icon-btn" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+      </div>
+      <div><strong>Nome:</strong> ${p.name}</div>
+      <div><strong>Categoria:</strong> ${p.cat || 'Nenhuma'}</div>
+      <div><strong>Quantidade:</strong> ${p.qty} un</div>
+      <div><strong>Preço de custo:</strong> ${money(p.cost)}</div>
+      <div><strong>Preço de venda:</strong> ${money(p.price)}</div>
+      <div><strong>Lucro unitário:</strong> ${money(p.price - p.cost)}</div>
+      <div><strong>Lucro total potencial:</strong> ${money((p.price - p.cost) * p.qty)}</div>
+      <div class="sep"></div>
+      <div class="small-muted">ID: ${p.id}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Client Views
+function renderClientViews() {
+  if (state.currentView === 'shop') {
+    renderStoreProducts();
+    renderCart();
+    el('shoppingArea').style.display = 'block';
+    el('orderTracking').style.display = 'none';
+  } else {
+    renderClientOrders();
+    el('shoppingArea').style.display = 'none';
+    el('orderTracking').style.display = 'block';
+  }
+}
+
+function renderStoreProducts() {
+  const container = el('storeProductsList');
+  container.innerHTML = '';
+  
+  if(state.data.products.length === 0){
+    container.innerHTML = '<div class="empty">Nenhum produto disponível.</div>';
+    return;
+  }
+  
+  state.data.products.forEach(p => {
+    if (p.qty <= 0) return;
+    
+    const div = document.createElement('div');
+    div.className = 'product';
+    
+    const left = document.createElement('div');
+    left.style.display = 'flex'; 
+    left.style.flexDirection = 'column';
+    
+    const name = document.createElement('div'); 
+    name.className = 'pname'; 
+    name.textContent = p.name;
+    
+    const meta = document.createElement('div'); 
+    meta.className = 'meta'; 
+    meta.textContent = `${p.qty} disponíveis • ${money(p.price)}`;
+    
+    left.appendChild(name); 
+    left.appendChild(meta);
+    
+    const actions = document.createElement('div'); 
+    actions.className = 'product-actions';
+    
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number';
+    qtyInput.min = 1;
+    qtyInput.max = p.qty;
+    qtyInput.value = 1;
+    qtyInput.style.width = '60px';
+    qtyInput.className = 'input';
+    
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn primary';
+    addBtn.textContent = 'Adicionar';
+    addBtn.onclick = () => {
+      const quantity = parseInt(qtyInput.value) || 1;
+      if (quantity < 1) return alert('Quantidade inválida');
+      if (quantity > p.qty) return alert('Quantidade indisponível');
+      
+      addToCart(p, quantity);
+    };
+    
+    actions.appendChild(qtyInput);
+    actions.appendChild(addBtn);
+    
+    div.appendChild(left);
+    div.appendChild(actions);
+    container.appendChild(div);
+  });
+}
+
+function addToCart(product, quantity) {
+  const existingItem = state.cart.find(item => item.product.id === product.id);
+  
+  if (existingItem) {
+    if (existingItem.quantity + quantity > product.qty) {
+      return alert('Quantidade indisponível');
+    }
+    existingItem.quantity += quantity;
+  } else {
+    state.cart.push({
+      product: { ...product },
+      quantity: quantity
+    });
+  }
+  
+  renderCart();
+}
+
+function renderCart() {
+  const container = el('cartItems');
+  const countEl = el('cartCount');
+  
+  if (state.cart.length === 0) {
+    container.innerHTML = '<div class="empty">Carrinho vazio</div>';
+    countEl.textContent = '0 itens';
+    return;
+  }
+  
+  container.innerHTML = '';
+  let totalItems = 0;
+  
+  state.cart.forEach((item, index) => {
+    totalItems += item.quantity;
+    
+    const div = document.createElement('div');
+    div.className = 'product';
+    
+    const left = document.createElement('div');
+    left.style.display = 'flex'; 
+    left.style.flexDirection = 'column';
+    
+    const name = document.createElement('div'); 
+    name.className = 'pname'; 
+    name.textContent = item.product.name;
+    
+    const meta = document.createElement('div'); 
+    meta.className = 'meta'; 
+    meta.textContent = `${item.quantity} × ${money(item.product.price)} = ${money(item.product.price * item.quantity)}`;
+    
+    left.appendChild(name); 
+    left.appendChild(meta);
+    
+    const actions = document.createElement('div'); 
+    actions.className = 'product-actions';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'icon-btn';
+    removeBtn.textContent = 'Remover';
+    removeBtn.onclick = () => {
+      state.cart.splice(index, 1);
+      renderCart();
+    };
+    
+    actions.appendChild(removeBtn);
+    
+    div.appendChild(left);
+    div.appendChild(actions);
+    container.appendChild(div);
+  });
+  
+  countEl.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
+}
+
+// Checkout
+el('checkoutBtn').onclick = () => {
+  if (state.cart.length === 0) return alert('Carrinho vazio');
+  
+  if (state.role === 'guest') {
+    openCheckoutModal();
+  } else {
+    openCheckoutModal();
+  }
+};
+
+function openCheckoutModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.onclick = (ev) => { if(ev.target === modal) modal.remove(); };
+  
+  let total = 0;
+  state.cart.forEach(item => {
+    total += item.product.price * item.quantity;
+  });
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong>Finalizar Pedido</strong>
+        <button class="icon-btn" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+      </div>
+      
+      <div style="margin-bottom:12px">
+        <strong>Resumo do Pedido:</strong>
+        <div style="margin-top:8px">
+          ${state.cart.map(item => `
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span>${item.product.name} (${item.quantity}x)</span>
+              <span>${money(item.product.price * item.quantity)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">
+          <strong>Total:</strong>
+          <strong>${money(total)}</strong>
+        </div>
+      </div>
+      
+      <div class="sep"></div>
+      
+      <div style="margin-bottom:12px">
+        <strong>Dados de Entrega</strong>
+      </div>
+      
+      <div style="display:grid;gap:8px">
+        <div>
+          <label class="small">Nome completo</label>
+          <input id="checkoutName" class="input" placeholder="Seu nome completo">
+        </div>
+        <div>
+          <label class="small">Telefone</label>
+          <input id="checkoutPhone" class="input" placeholder="(11) 99999-9999">
+        </div>
+        <div>
+          <label class="small">Endereço completo</label>
+          <textarea id="checkoutAddress" class="input" placeholder="Rua, número, bairro, cidade, estado, CEP" rows="3"></textarea>
+        </div>
+        <div>
+          <label class="small">E-mail</label>
+          <input id="checkoutEmail" class="input" placeholder="seu@email.com" value="${state.role === 'guest' ? '' : state.email}" ${state.role !== 'guest' ? 'readonly' : ''}>
+        </div>
+        ${state.role === 'guest' ? `
+        <div>
+          <label class="small">Senha (para criar conta)</label>
+          <input id="checkoutPassword" type="password" class="input" placeholder="Crie uma senha">
+        </div>
+        ` : ''}
+      </div>
+      
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="confirmOrderBtn" class="btn primary" style="flex:1">Confirmar Pedido</button>
+        <button class="btn" onclick="this.closest('.modal-backdrop').remove()">Cancelar</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Add event listener for confirm order button
+  modal.querySelector('#confirmOrderBtn').onclick = () => {
+    const name = modal.querySelector('#checkoutName').value.trim();
+    const phone = modal.querySelector('#checkoutPhone').value.trim();
+    const address = modal.querySelector('#checkoutAddress').value.trim();
+    const email = modal.querySelector('#checkoutEmail').value.trim();
+    const password = state.role === 'guest' ? modal.querySelector('#checkoutPassword').value : '';
+    
+    if (!name || !phone || !address || !email) {
+      return alert('Preencha todos os dados de entrega');
+    }
+    
+    if (state.role === 'guest' && !password) {
+      return alert('Crie uma senha para sua conta');
+    }
+    
+    if (state.role === 'guest' && !email.includes('@')) {
+      return alert('Digite um e-mail válido');
+    }
+    
+    confirmOrder(name, phone, address, email, password);
+    modal.remove();
+  };
+}
+
+function confirmOrder(name, phone, address, email, password) {
+  // If guest, register as client
+  if (state.role === 'guest') {
+    const key = clientStorageKey(email);
+    if (localStorage.getItem(key)) {
+      return alert('Este e-mail já está registrado. Faça login primeiro.');
+    }
+    
+    const clientData = {
+      email: email.toLowerCase(),
+      password: password,
+      orders: [],
+      registeredAt: Date.now()
+    };
+    
+    localStorage.setItem(key, JSON.stringify(clientData));
+    state.email = email.toLowerCase();
+    state.role = 'client';
+    state.clientData = clientData;
+  }
+  
+  // Create order
+  const order = {
+    id: uid(),
+    clientEmail: state.email,
+    clientName: name,
+    clientPhone: phone,
+    clientAddress: address,
+    items: state.cart.map(item => ({
+      productId: item.product.id,
+      productName: item.product.name,
+      quantity: item.quantity,
+      unitPrice: item.product.price,
+      totalPrice: item.product.price * item.quantity
+    })),
+    total: state.cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0),
+    status: 'pending',
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  
+  // Update stock
+  state.cart.forEach(item => {
+    const product = state.data.products.find(p => p.id === item.product.id);
+    if (product) {
+      product.qty -= item.quantity;
+      addTransaction('out', item.quantity, `Venda: ${item.product.name} para ${name}`, item.product.name, product.cost, product.price);
     }
   });
-})();
-  </script>
+  
+  // Save admin data
+  saveState();
+  
+  // Add to client orders
+  if (state.role === 'client') {
+    state.clientData.orders.push(order);
+    const key = clientStorageKey(state.email);
+    localStorage.setItem(key, JSON.stringify(state.clientData));
+  }
+  
+  // Add to global orders
+  loadOrders();
+  state.orders.push(order);
+  saveOrders();
+  
+  // Clear cart
+  state.cart = [];
+  
+  alert('Pedido realizado com sucesso!');
+  renderCart();
+  
+  // Switch to order tracking
+  state.currentView = 'tracking';
+  renderClientViews();
+}
+
+// Order tracking for clients
+function renderClientOrders() {
+  const container = el('clientOrdersList');
+  container.innerHTML = '';
+  
+  let orders = [];
+  
+  if (state.role === 'client') {
+    orders = state.clientData.orders || [];
+  } else {
+    // For guests, try to find orders by email
+    loadOrders();
+    orders = state.orders.filter(order => order.clientEmail === state.email);
+  }
+  
+  if (orders.length === 0) {
+    container.innerHTML = '<div class="empty">Nenhum pedido realizado.</div>';
+    return;
+  }
+  
+  orders.sort((a, b) => b.createdAt - a.createdAt).forEach(order => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    
+    const left = document.createElement('div');
+    left.style.display = 'flex'; 
+    left.style.flexDirection = 'column';
+    left.style.flex = '1';
+    
+    const topRow = document.createElement('div');
+    topRow.style.display = 'flex'; 
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.alignItems = 'flex-start';
+    
+    const orderInfo = document.createElement('div');
+    const name = document.createElement('div'); 
+    name.className = 'pname'; 
+    name.textContent = `Pedido #${order.id.slice(-6)}`;
+    
+    const date = document.createElement('div'); 
+    date.className = 'meta'; 
+    date.textContent = new Date(order.createdAt).toLocaleString();
+    
+    orderInfo.appendChild(name);
+    orderInfo.appendChild(date);
+    
+    const status = document.createElement('div');
+    status.className = `status-badge status-${getStatusClass(order.status)}`;
+    status.textContent = getStatusText(order.status);
+    
+    topRow.appendChild(orderInfo);
+    topRow.appendChild(status);
+    
+    const items = document.createElement('div');
+    items.className = 'meta';
+    items.style.marginTop = '8px';
+    items.textContent = order.items.map(item => `${item.quantity}x ${item.productName}`).join(', ');
+    
+    const total = document.createElement('div');
+    total.className = 'meta';
+    total.style.marginTop = '4px';
+    total.textContent = `Total: ${money(order.total)}`;
+    
+    const address = document.createElement('div');
+    address.className = 'meta';
+    address.style.marginTop = '4px';
+    address.textContent = `Entregar em: ${order.clientAddress}`;
+    
+    left.appendChild(topRow);
+    left.appendChild(items);
+    left.appendChild(total);
+    left.appendChild(address);
+    
+    div.appendChild(left);
+    container.appendChild(div);
+  });
+}
+
+function getStatusClass(status) {
+  const statusMap = {
+    'pending': 'pending',
+    'preparing': 'preparing',
+    'shipping': 'shipping',
+    'delivered': 'delivered',
+    'cancelled': 'cancelled'
+  };
+  return statusMap[status] || 'pending';
+}
+
+function getStatusText(status) {
+  const statusMap = {
+    'pending': 'Pendente',
+    'preparing': 'Em preparação',
+    'shipping': 'A caminho',
+    'delivered': 'Entregue',
+    'cancelled': 'Cancelado'
+  };
+  return statusMap[status] || 'Pendente';
+}
+
+// Back to shop button
+el('backToShopBtn').onclick = () => {
+  state.currentView = 'shop';
+  renderClientViews();
+};
+
+// Orders Management for Admin
+function renderOrdersManagement() {
+  const container = el('ordersList');
+  container.innerHTML = '';
+  
+  loadOrders();
+  
+  if (state.orders.length === 0) {
+    container.innerHTML = '<div class="empty">Nenhum pedido realizado.</div>';
+    return;
+  }
+  
+  state.orders.sort((a, b) => b.createdAt - a.createdAt).forEach(order => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    
+    const left = document.createElement('div');
+    left.style.display = 'flex'; 
+    left.style.flexDirection = 'column';
+    left.style.flex = '1';
+    
+    const topRow = document.createElement('div');
+    topRow.style.display = 'flex'; 
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.alignItems = 'flex-start';
+    
+    const orderInfo = document.createElement('div');
+    const name = document.createElement('div'); 
+    name.className = 'pname'; 
+    name.textContent = `Pedido #${order.id.slice(-6)} - ${order.clientName}`;
+    
+    const contact = document.createElement('div'); 
+    contact.className = 'meta'; 
+    contact.textContent = `${order.clientEmail} • ${order.clientPhone}`;
+    
+    const date = document.createElement('div'); 
+    date.className = 'meta'; 
+    date.textContent = new Date(order.createdAt).toLocaleString();
+    
+    orderInfo.appendChild(name);
+    orderInfo.appendChild(contact);
+    orderInfo.appendChild(date);
+    
+    const statusControl = document.createElement('div');
+    statusControl.style.display = 'flex';
+    statusControl.style.alignItems = 'center';
+    statusControl.style.gap = '8px';
+    
+    const statusSelect = document.createElement('select');
+    statusSelect.className = 'input select-dark';
+    statusSelect.innerHTML = `
+      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendente</option>
+      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Em preparação</option>
+      <option value="shipping" ${order.status === 'shipping' ? 'selected' : ''}>A caminho</option>
+      <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Entregue</option>
+      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+    `;
+    
+    statusSelect.onchange = () => {
+      order.status = statusSelect.value;
+      order.updatedAt = Date.now();
+      saveOrders();
+      
+      // Update client's order status if they have an account
+      const clientKey = clientStorageKey(order.clientEmail);
+      const clientData = localStorage.getItem(clientKey);
+      if (clientData) {
+        try {
+          const client = JSON.parse(clientData);
+          const clientOrder = client.orders.find(o => o.id === order.id);
+          if (clientOrder) {
+            clientOrder.status = order.status;
+            clientOrder.updatedAt = order.updatedAt;
+            localStorage.setItem(clientKey, JSON.stringify(client));
+          }
+        } catch(e) {
+          console.error('Error updating client order:', e);
+        }
+      }
+    };
+    
+    statusControl.appendChild(statusSelect);
+    
+    topRow.appendChild(orderInfo);
+    topRow.appendChild(statusControl);
+    
+    const items = document.createElement('div');
+    items.className = 'meta';
+    items.style.marginTop = '8px';
+    items.textContent = order.items.map(item => `${item.quantity}x ${item.productName} (${money(item.unitPrice)} cada)`).join(', ');
+    
+    const total = document.createElement('div');
+    total.className = 'meta';
+    total.style.marginTop = '4px';
+    total.textContent = `Total: ${money(order.total)}`;
+    
+    const address = document.createElement('div');
+    address.className = 'meta';
+    address.style.marginTop = '4px';
+    address.textContent = `Endereço: ${order.clientAddress}`;
+    
+    left.appendChild(topRow);
+    left.appendChild(items);
+    left.appendChild(total);
+    left.appendChild(address);
+    
+    div.appendChild(left);
+    container.appendChild(div);
+  });
+}
+
+// Initialize
+window.onload = () => {
+  // Render orders management for admin
+  if (state.role === 'admin') {
+    renderOrdersManagement();
+  }
+};
+
+// Update renderAll to include orders management
+const originalRenderAll = renderAll;
+renderAll = function() {
+  originalRenderAll();
+  if (state.role === 'admin') {
+    renderOrdersManagement();
+  }
+};
+</script>
 </body>
 </html>
